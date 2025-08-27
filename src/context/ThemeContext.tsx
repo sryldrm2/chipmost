@@ -14,6 +14,7 @@ export interface ColorPalette {
   
   // Arka plan renkleri
   background: string;
+  backgroundSecondary: string;
   surface: string;
   card: string;
   
@@ -30,12 +31,14 @@ export interface ColorPalette {
   success: string;
   warning: string;
   error: string;
+  errorBackground: string;
   info: string;
   
   // Buton renkleri
   buttonPrimary: string;
   buttonSecondary: string;
   buttonText: string;
+  buttonTextSecondary: string;
   
   // Özel renkler
   shadow: string;
@@ -50,6 +53,7 @@ const lightColors: ColorPalette = {
   primaryDark: '#1D4ED8',
   
   background: '#FFFFFF',
+  backgroundSecondary: '#F8FAFC',
   surface: '#F8FAFC',
   card: '#F8FAFC',
   
@@ -63,11 +67,13 @@ const lightColors: ColorPalette = {
   success: '#059669',
   warning: '#D97706',
   error: '#DC2626',
+  errorBackground: '#FEF3F2',
   info: '#0891B2',
   
   buttonPrimary: '#2563EB',
   buttonSecondary: '#64748B',
   buttonText: '#FFFFFF',
+  buttonTextSecondary: '#64748B',
   
   shadow: 'rgba(0, 0, 0, 0.08)',
   overlay: 'rgba(0, 0, 0, 0.4)',
@@ -81,6 +87,7 @@ const darkColors: ColorPalette = {
   primaryDark: '#2563EB',
   
   background: '#0F172A',
+  backgroundSecondary: '#1E293B',
   surface: '#1E293B',
   card: '#1E293B',
   
@@ -94,11 +101,13 @@ const darkColors: ColorPalette = {
   success: '#10B981',
   warning: '#F59E0B',
   error: '#EF4444',
+  errorBackground: '#FEF3F2',
   info: '#06B6D4',
   
   buttonPrimary: '#3B82F6',
   buttonSecondary: '#94A3B8',
   buttonText: '#FFFFFF',
+  buttonTextSecondary: '#94A3B8',
   
   shadow: 'rgba(0, 0, 0, 0.25)',
   overlay: 'rgba(0, 0, 0, 0.6)',

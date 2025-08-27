@@ -23,20 +23,25 @@ export default function SearchResults({ results, isLoading, searchTime }: Search
   const { addItem } = useCart();
 
   const handleAddToCart = (result: SupplierResult) => {
+    // MOQ kontrolü - minimum sipariş miktarını sağla
+    const qty = Math.max(1, result.moq ?? 1);
+    
     // Cart item formatına dönüştür
     const cartItem = {
       id: `${result.supplier}-${result.partNumber}`,
       name: `${result.partNumber} - ${result.supplier}`,
-      price: result.price,
+      unitPrice: result.price,
+      currency: result.currency || 'USD',
+      moq: result.moq,
       thumbnail: null,
       inStock: result.stock > 0,
     };
 
-    addItem(cartItem, 1);
+    addItem(cartItem, qty);
     
     Alert.alert(
       'Başarılı',
-      `${result.partNumber} sepetinize eklendi!`,
+      `${result.partNumber} sepetinize eklendi!${result.moq && result.moq > 1 ? ` (${qty} adet - minimum sipariş)` : ''}`,
       [{ text: 'Tamam', style: 'default' }]
     );
   };

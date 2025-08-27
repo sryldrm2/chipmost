@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { format } from '../../utils/currency';
 
 interface SearchResultCardProps {
   id: string;
@@ -7,7 +8,9 @@ interface SearchResultCardProps {
   description: string;
   category: string;
   price: number;
+  currency?: 'USD' | 'TRY' | 'EUR';
   inStock: boolean;
+  moq?: number;
   onPress: () => void;
 }
 
@@ -17,33 +20,56 @@ export default function SearchResultCard({
   description, 
   category, 
   price,
+  currency = 'TRY',
   inStock,
+  moq,
   onPress 
 }: SearchResultCardProps) {
   return (
-    <TouchableOpacity style={styles.card} onPress={onPress}>
+    <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.7}>
       <View style={styles.header}>
         <Text style={styles.title}>{title}</Text>
         <View style={styles.headerRight}>
           <Text style={styles.category}>{category}</Text>
-          <Text style={[styles.stockStatus, { color: inStock ? '#28a745' : '#dc3545' }]}>
-            {inStock ? '✓ Stokta' : '✗ Stok Yok'}
-          </Text>
+          <View style={styles.stockContainer}>
+            <View style={[
+              styles.stockIndicator, 
+              { backgroundColor: inStock ? '#28a745' : '#dc3545' }
+            ]} />
+            <Text style={[styles.stockStatus, { color: inStock ? '#28a745' : '#dc3545' }]}>
+              {inStock ? '✓ Stokta' : '✗ Stok Yok'}
+            </Text>
+          </View>
         </View>
       </View>
       
-      <Text style={styles.description}>{description}</Text>
+      <Text style={styles.description} numberOfLines={2}>{description}</Text>
       
       <View style={styles.footer}>
         <View style={styles.footerLeft}>
           <Text style={styles.id}>ID: {id}</Text>
-          <Text style={styles.price}>₺{price.toFixed(2)}</Text>
+          <View style={styles.priceContainer}>
+            <Text style={styles.price}>
+              {format(price, currency)}
+            </Text>
+            {currency !== 'TRY' && (
+              <Text style={styles.priceTRY}>
+                ≈ {format(price, 'TRY')} (yaklaşık)
+              </Text>
+            )}
+          </View>
+          {moq && moq > 1 && (
+            <Text style={styles.moqInfo}>Min. sipariş: {moq} adet</Text>
+          )}
         </View>
         <TouchableOpacity 
-          style={styles.detailButton}
+          style={[styles.detailButton, !inStock && styles.detailButtonDisabled]}
           onPress={onPress}
+          disabled={!inStock}
         >
-          <Text style={styles.detailButtonText}>Detaya Git</Text>
+          <Text style={[styles.detailButtonText, !inStock && styles.detailButtonTextDisabled]}>
+            {inStock ? 'Detaya Git' : 'Stok Yok'}
+          </Text>
         </TouchableOpacity>
       </View>
     </TouchableOpacity>
@@ -56,9 +82,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    boxShadow: '0px 1px 4px rgba(0, 0, 0, 0.1)',
     elevation: 2,
     borderWidth: 1,
     borderColor: '#e0e0e0',
@@ -89,6 +113,16 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     marginBottom: 4,
   },
+  stockContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  stockIndicator: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
   stockStatus: {
     fontSize: 11,
     fontWeight: '500',
@@ -113,10 +147,24 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
     marginBottom: 4,
   },
+  priceContainer: {
+    marginBottom: 4,
+  },
   price: {
     fontSize: 18,
     fontWeight: '700',
     color: '#28a745',
+    marginBottom: 2,
+  },
+  priceTRY: {
+    fontSize: 12,
+    color: '#6b7280',
+    fontStyle: 'italic',
+  },
+  moqInfo: {
+    fontSize: 11,
+    color: '#6b7280',
+    fontStyle: 'italic',
   },
   detailButton: {
     backgroundColor: '#007AFF',
@@ -128,5 +176,11 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 14,
     fontWeight: '600',
+  },
+  detailButtonDisabled: {
+    backgroundColor: '#9ca3af',
+  },
+  detailButtonTextDisabled: {
+    color: '#f3f4f6',
   },
 });

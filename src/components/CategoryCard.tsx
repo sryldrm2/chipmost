@@ -30,7 +30,7 @@ export default function CategoryCard({ emoji, title, desc, onPress }: Props) {
 const styles = StyleSheet.create({
   card: {
     flex: 1, borderRadius: 16, padding: 14, minHeight: 110,
-    shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 6, elevation: 2,
+    boxShadow: '0px 1px 6px rgba(0, 0, 0, 0.06)', elevation: 2,
   },
   emoji: { fontSize: 26, marginBottom: 6 },
   title: { fontSize: 15, fontWeight: '700' },

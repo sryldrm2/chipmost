@@ -28,6 +28,7 @@ export type SearchStackParamList = {
   SearchScreen: undefined;
   SearchResults: { query: string };
   FilterScreen: undefined;
+  ProductDetail: { productId: string };
 };
 
 export type CatalogStackParamList = {

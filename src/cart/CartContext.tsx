@@ -8,6 +8,7 @@ type CartCtx = {
   removeItem: (id: string) => void;
   inc: (id: string) => void;
   dec: (id: string) => void;
+  updateQuantity: (id: string, qty: number) => void;
   clear: () => void;
   applyCoupon: (code: string) => boolean;
   clearCoupon: () => void;
@@ -44,6 +45,15 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       const stored = await AsyncStorage.getItem(STORAGE_KEY);
       if (stored) {
         const parsed = JSON.parse(stored);
+        // Migrate old cart data if needed
+        if (parsed.lines && parsed.lines.length > 0 && !parsed.lines[0].hasOwnProperty('unitPrice')) {
+          parsed.lines = parsed.lines.map((line: any) => ({
+            ...line,
+            unitPrice: line.price || 0,
+            currency: line.currency || 'TRY',
+            moq: line.moq || 1
+          }));
+        }
         setState(parsed);
       }
     } catch (error) {
@@ -65,14 +75,20 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       return; // Stokta olmayan ürün eklenemez
     }
 
+    // MOQ kontrolü - minimum sipariş miktarını sağla
+    const minQty = item.moq ?? 1;
+    const actualQty = Math.max(qty, minQty);
+
     setState(prev => {
       const i = prev.lines.findIndex(x => x.id === item.id);
       if (i >= 0) {
         const next = [...prev.lines];
-        next[i] = { ...next[i], qty: next[i].qty + qty };
+        const newQty = next[i].qty + actualQty;
+        // Mevcut ürün için de MOQ kontrolü yap
+        next[i] = { ...next[i], qty: Math.max(newQty, minQty) };
         return { ...prev, lines: next };
       }
-      return { ...prev, lines: [...prev.lines, { ...item, qty }] };
+      return { ...prev, lines: [...prev.lines, { ...item, qty: actualQty }] };
     });
   };
 
@@ -83,12 +99,38 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     setState(prev => ({ ...prev, lines: prev.lines.map(x => x.id === id ? { ...x, qty: x.qty + 1 } : x) }));
 
   const dec: CartCtx['dec'] = (id) =>
-    setState(prev => ({
-      ...prev,
-      lines: prev.lines
-        .map(x => x.id === id ? { ...x, qty: Math.max(0, x.qty - 1) } : x)
-        .filter(x => x.qty > 0)
-    }));
+    setState(prev => {
+      const line = prev.lines.find(x => x.id === id);
+      if (!line) return prev;
+      
+      const minQty = line.moq ?? 1;
+      const newQty = Math.max(minQty, line.qty - 1);
+      
+      if (newQty === minQty) {
+        // MOQ'ya ulaştıysa ürünü kaldır
+        return { ...prev, lines: prev.lines.filter(x => x.id !== id) };
+      }
+      
+      return {
+        ...prev,
+        lines: prev.lines.map(x => x.id === id ? { ...x, qty: newQty } : x)
+      };
+    });
+
+  const updateQuantity: CartCtx['updateQuantity'] = (id, qty) => {
+    setState(prev => {
+      const line = prev.lines.find(x => x.id === id);
+      if (!line) return prev;
+      
+      const minQty = line.moq ?? 1;
+      const actualQty = Math.max(qty, minQty);
+      
+      return {
+        ...prev,
+        lines: prev.lines.map(x => x.id === id ? { ...x, qty: actualQty } : x)
+      };
+    });
+  };
 
   const clear = () => setState({ lines: [], discount: 0, couponCode: undefined, deliveryNote: undefined });
 
@@ -114,7 +156,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   };
 
   const subtotal = useMemo(
-    () => state.lines.reduce((s, l) => s + l.price * l.qty, 0),
+    () => state.lines.reduce((s, l) => s + l.unitPrice * l.qty, 0),
     [state.lines]
   );
 
@@ -134,6 +176,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     removeItem, 
     inc, 
     dec, 
+    updateQuantity,
     clear, 
     applyCoupon, 
     clearCoupon, 

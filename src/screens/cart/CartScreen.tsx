@@ -1,94 +1,191 @@
-import React from 'react';
-import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { FlatList, Pressable, StyleSheet, Text, View, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useCart } from '../../cart/CartContext';
-import CartItemRow from '../../components/CartItemRow';
-import CartSummary from '../../components/CartSummary';
 import { useTheme } from '../../context/ThemeContext';
+import { validateMOQ, calculateTotalsTRY } from '../../utils/cartTotals';
+import CartLineItem from './CartLineItem';
+import CartTotals from './CartTotals';
+import StickyCTA from './StickyCTA';
 
 export default function CartScreen() {
   const nav = useNavigation<any>();
   const { state, totalCount } = useCart();
   const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
+  
+  const [totals, setTotals] = useState<{ subtotalTRY: number, shippingTRY: number, totalTRY: number } | null>(null);
+  const [isCalculating, setIsCalculating] = useState(false);
+  
+  // MOQ validasyonu
+  const moqValidation = validateMOQ(state.lines);
+  
+  // Kargo hesaplama (150₺ üstü ücretsiz)
+  const shippingTRY = totals && totals.subtotalTRY > 150 ? 0 : (state.lines.length ? 29.9 : 0);
+  
+  // TRY toplamları hesapla
+  useEffect(() => {
+    if (state.lines.length === 0) {
+      setTotals(null);
+      return;
+    }
 
+    let alive = true;
+    setIsCalculating(true);
+    
+    calculateTotalsTRY(state.lines, 0).then(calculatedTotals => {
+      if (alive) {
+        setTotals(calculatedTotals);
+        setIsCalculating(false);
+      }
+    });
+    
+    return () => { alive = false; };
+  }, [state.lines]);
+  
+  // Kargo dahil toplam
+  const finalTotalTRY = totals ? totals.subtotalTRY + shippingTRY : 0;
+
+  // Boş sepet durumu
   if (!state.lines.length) {
     return (
-      <View style={[styles.empty, { backgroundColor: colors.background }]}>
-        <Text style={[styles.emptyTitle, { color: colors.text }]}>Sepetin boş</Text>
-        <Text style={[styles.muted, { color: colors.textSecondary }]}>Ürün ekleyerek alışverişe başlayabilirsin.</Text>
-        <Pressable style={[styles.cta, { backgroundColor: colors.buttonPrimary }]} onPress={() => nav.reset({ index: 0, routes: [{ name: 'CatalogHome' }] })}>
-          <Text style={[styles.ctaText, { color: colors.buttonText }]}>Alışverişe Dön</Text>
-        </Pressable>
+      <View style={[styles.emptyContainer, { backgroundColor: colors.background }]}>
+        <View style={styles.emptyContent}>
+          <Text style={[styles.emptyTitle, { color: colors.text }]}>Sepetin boş</Text>
+          <Text style={[styles.emptySubtitle, { color: colors.textSecondary }]}>
+            Ürün ekleyerek alışverişe başlayabilirsin
+          </Text>
+          <Pressable 
+            style={[styles.emptyCTA, { backgroundColor: colors.primary }]} 
+            onPress={() => nav.reset({ index: 0, routes: [{ name: 'CatalogHome' }] })}
+          >
+            <Text style={[styles.emptyCTAText, { color: colors.buttonText }]}>
+              Alışverişe Dön
+            </Text>
+          </Pressable>
+        </View>
       </View>
     );
   }
 
+  const handleCheckout = () => {
+    if (!moqValidation.ok) {
+      Alert.alert(
+        'Minimum Sipariş Miktarı Uyarısı',
+        'Bazı ürünlerde minimum sipariş miktarı karşılanmamış. Lütfen ürün miktarlarını kontrol edin.',
+        [{ text: 'Tamam', style: 'default' }]
+      );
+      return;
+    }
+    
+    nav.navigate('Checkout');
+  };
+
   return (
-    <FlatList
-      contentContainerStyle={{ padding: 16 }}
-      data={state.lines}
-      keyExtractor={(x) => x.id}
-      ListHeaderComponent={
-        <View style={styles.header}>
-          <Text style={[styles.title, { color: colors.text }]}>Chipmost – Sepet</Text>
-          <Text style={[styles.badge, { color: colors.primary, backgroundColor: colors.surface }]}>{totalCount} ürün</Text>
-        </View>
-      }
-      renderItem={({ item }) => (
-        <CartItemRow 
-          id={item.id} 
-          name={item.name} 
-          price={item.price} 
-          qty={item.qty} 
-          thumbnail={item.thumbnail}
-          inStock={item.inStock}
-        />
-      )}
-      ListFooterComponent={
-        <>
-          <CartSummary />
-          
-          {/* Checkout Button */}
-          <View style={styles.checkoutSection}>
-            <Pressable 
-              style={[styles.checkoutButton, { backgroundColor: colors.success }]}
-              onPress={() => nav.navigate('Checkout')}
-            >
-              <Text style={[styles.checkoutButtonText, { color: colors.buttonText }]}>Ödemeye Geç</Text>
-              <Ionicons name="arrow-forward" size={20} color={colors.buttonText} />
-            </Pressable>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <FlatList
+        contentContainerStyle={[
+          styles.listContent,
+          { paddingBottom: 120 + insets.bottom } // Sticky CTA için alan
+        ]}
+        data={state.lines}
+        keyExtractor={(item) => item.id}
+        ListHeaderComponent={
+          <View style={styles.header}>
+            <Text style={[styles.title, { color: colors.text }]}>Sepetim</Text>
+            <View style={[styles.badge, { backgroundColor: colors.primary }]}>
+              <Text style={[styles.badgeText, { color: colors.buttonText }]}>
+                {totalCount} ürün
+              </Text>
+            </View>
           </View>
-        </>
-      }
-    />
+        }
+        renderItem={({ item }) => (
+          <CartLineItem 
+            item={{
+              ...item,
+              supplier: item.supplier || 'Chipmost' // Varsayılan supplier
+            }}
+          />
+        )}
+        ListFooterComponent={
+          <CartTotals
+            subtotalTRY={totals?.subtotalTRY || 0}
+            shippingTRY={shippingTRY}
+            totalTRY={finalTotalTRY}
+            isLoading={isCalculating}
+          />
+        }
+      />
+      
+      {/* Sticky CTA */}
+      <StickyCTA
+        onCheckout={handleCheckout}
+        isCheckoutDisabled={!moqValidation.ok}
+        moqViolations={moqValidation.violations}
+        totalItems={totalCount}
+      />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  empty: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 8, padding: 24 },
-  emptyTitle: { fontSize: 20, fontWeight: '800' },
-  muted: { },
-  cta: { marginTop: 8, borderRadius: 12, paddingHorizontal: 16, paddingVertical: 10 },
-  ctaText: { fontWeight: '800' },
-
-  header: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 },
-  title: { fontSize: 20, fontWeight: '800' },
-  badge: { fontSize: 12, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 999 },
-  
-  checkoutSection: { marginTop: 24, paddingHorizontal: 16 },
-  checkoutButton: { 
-    flexDirection: 'row', 
-    alignItems: 'center', 
-    justifyContent: 'center', 
-    paddingVertical: 16, 
-    borderRadius: 12, 
-    gap: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 3,
+  container: {
+    flex: 1,
   },
-  checkoutButtonText: { fontSize: 16, fontWeight: '700' },
+  listContent: {
+    padding: 16,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: '700',
+  },
+  badge: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+  },
+  badgeText: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 32,
+  },
+  emptyContent: {
+    alignItems: 'center',
+    maxWidth: 300,
+  },
+  emptyTitle: {
+    fontSize: 24,
+    fontWeight: '700',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  emptySubtitle: {
+    fontSize: 16,
+    textAlign: 'center',
+    marginBottom: 32,
+    opacity: 0.7,
+    lineHeight: 22,
+  },
+  emptyCTA: {
+    paddingHorizontal: 32,
+    paddingVertical: 16,
+    borderRadius: 12,
+  },
+  emptyCTAText: {
+    fontSize: 16,
+    fontWeight: '700',
+  },
 });
