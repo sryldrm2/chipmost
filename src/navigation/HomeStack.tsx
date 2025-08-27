@@ -2,7 +2,7 @@ import React from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
 import { Text, View, StyleSheet, TouchableOpacity } from 'react-native';
 import { HomeStackParamList } from '../types/navigation';
-import HomeScreen from '../screens/HomeScreen';
+import HomePageScreen from '../screens/HomePageScreen';
 
 const Stack = createStackNavigator<HomeStackParamList>();
 
@@ -41,7 +41,7 @@ export default function HomeStack() {
     <Stack.Navigator>
       <Stack.Screen 
         name="HomeScreen" 
-        component={HomeScreen} 
+        component={HomePageScreen} 
         options={{ title: 'Ana Sayfa' }}
       />
       <Stack.Screen 

@@ -2,7 +2,7 @@ import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import { View, Text, StyleSheet } from 'react-native';
-import HomeStack from './HomeStack';
+import HomeScreen from '../screens/HomeScreen';
 import SearchStack from './SearchStack';
 import CatalogStack from './CatalogStack';
 import CartStack from './CartStack';
@@ -87,7 +87,7 @@ export default function MainTabNavigator() {
     >
       <Tab.Screen 
         name="Home" 
-        component={HomeStack}
+        component={HomeScreen}
         options={{ title: 'Ana Sayfa' }}
       />
       <Tab.Screen 

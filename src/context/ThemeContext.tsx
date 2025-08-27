@@ -40,6 +40,7 @@ export interface ColorPalette {
   // Özel renkler
   shadow: string;
   overlay: string;
+  accent: string;
 }
 
 // Light tema
@@ -70,6 +71,7 @@ const lightColors: ColorPalette = {
   
   shadow: 'rgba(0, 0, 0, 0.08)',
   overlay: 'rgba(0, 0, 0, 0.4)',
+  accent: '#10B981',
 };
 
 // Dark tema
@@ -100,6 +102,7 @@ const darkColors: ColorPalette = {
   
   shadow: 'rgba(0, 0, 0, 0.25)',
   overlay: 'rgba(0, 0, 0, 0.6)',
+  accent: '#10B981',
 };
 
 // Tema context interface'i
