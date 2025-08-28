@@ -6,20 +6,22 @@ import type { SearchStackParamList } from '../navigation/SearchStack';
 import { getProductById } from '../data/products';
 import { useCart } from '../cart/CartContext';
 import { format } from '../utils/currency';
+import { useTheme } from '../context/ThemeContext';
 
 export default function ProductDetailScreen() {
   const route = useRoute<RouteProp<SearchStackParamList, 'ProductDetail'>>();
   const { productId } = route.params;
   const product = getProductById(productId);
+  const { colors } = useTheme();
 
   const { addItem } = useCart();
 
   if (!product) {
     return (
-      <View style={styles.errorContainer}>
-        <Text style={styles.errorText}>Ürün bulunamadı</Text>
-        <Text style={styles.errorSubtext}>Ürün ID: {productId}</Text>
-        <Text style={styles.errorHelp}>Lütfen arama sayfasına geri dönün ve farklı bir ürün seçin.</Text>
+      <View style={[styles.errorContainer, { backgroundColor: colors.background }]}>
+        <Text style={[styles.errorText, { color: colors.error }]}>Ürün bulunamadı</Text>
+        <Text style={[styles.errorSubtext, { color: colors.textSecondary }]}>Ürün ID: {productId}</Text>
+        <Text style={[styles.errorHelp, { color: colors.textSecondary }]}>Lütfen arama sayfasına geri dönün ve farklı bir ürün seçin.</Text>
       </View>
     );
   }
@@ -46,7 +48,7 @@ export default function ProductDetailScreen() {
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
+    <ScrollView style={[styles.container, { backgroundColor: colors.background }]} contentContainerStyle={styles.contentContainer}>
       {/* Ürün Resmi */}
       {product.imageUrl ? (
         <Image 
@@ -55,29 +57,32 @@ export default function ProductDetailScreen() {
           resizeMode="cover"
         />
       ) : (
-        <View style={styles.placeholderImage}>
-          <Text style={styles.placeholderText}>Resim Yok</Text>
+        <View style={[styles.placeholderImage, { backgroundColor: colors.surface }]}>
+          <Text style={[styles.placeholderText, { color: colors.textSecondary }]}>Resim Yok</Text>
         </View>
       )}
 
       {/* Ürün Bilgileri */}
       <View style={styles.productInfo}>
-        <Text style={styles.productName}>{product.name}</Text>
+        <Text style={[styles.productName, { color: colors.text }]}>{product.name}</Text>
         
         {product.category && (
           <View style={styles.categoryContainer}>
-            <Text style={styles.categoryText}>{product.category}</Text>
+            <Text style={[styles.categoryText, { 
+              color: colors.primary, 
+              backgroundColor: colors.primaryLight 
+            }]}>{product.category}</Text>
           </View>
         )}
 
         {/* Fiyat ve Stok */}
         <View style={styles.priceStockContainer}>
           <View style={styles.priceContainer}>
-            <Text style={styles.priceText}>
+            <Text style={[styles.priceText, { color: colors.success }]}>
               {format(product.price, product.currency || 'TRY')}
             </Text>
             {product.currency && product.currency !== 'TRY' && (
-              <Text style={styles.priceSubtext}>
+              <Text style={[styles.priceSubtext, { color: colors.textSecondary }]}>
                 ≈ {format(product.price, 'TRY')} (yaklaşık)
               </Text>
             )}
@@ -86,11 +91,11 @@ export default function ProductDetailScreen() {
           <View style={styles.stockContainer}>
             <View style={[
               styles.stockIndicator, 
-              { backgroundColor: product.inStock ? '#10b981' : '#ef4444' }
+              { backgroundColor: product.inStock ? colors.success : colors.error }
             ]} />
             <Text style={[
               styles.stockText, 
-              { color: product.inStock ? '#10b981' : '#ef4444' }
+              { color: product.inStock ? colors.success : colors.error }
             ]}>
               {product.inStock 
                 ? `Stokta • ${product.stockQty ?? 0} adet` 
@@ -102,25 +107,25 @@ export default function ProductDetailScreen() {
 
         {/* MOQ Bilgisi */}
         {product.moq && product.moq > 1 && (
-          <View style={styles.moqContainer}>
-            <Text style={styles.moqLabel}>📦 Minimum Sipariş:</Text>
-            <Text style={styles.moqText}>{product.moq} adet</Text>
+          <View style={[styles.moqContainer, { backgroundColor: colors.primaryLight }]}>
+            <Text style={[styles.moqLabel, { color: colors.primary }]}>📦 Minimum Sipariş:</Text>
+            <Text style={[styles.moqText, { color: colors.primary }]}>{product.moq} adet</Text>
           </View>
         )}
 
         {/* MPN */}
         {product.mpn && (
           <View style={styles.mpnContainer}>
-            <Text style={styles.mpnLabel}>MPN:</Text>
-            <Text style={styles.mpnText}>{product.mpn}</Text>
+            <Text style={[styles.mpnLabel, { color: colors.textSecondary }]}>MPN:</Text>
+            <Text style={[styles.mpnText, { color: colors.text }]}>{product.mpn}</Text>
           </View>
         )}
 
         {/* Açıklama */}
         {product.description && (
           <View style={styles.descriptionContainer}>
-            <Text style={styles.descriptionTitle}>Ürün Açıklaması</Text>
-            <Text style={styles.descriptionText}>{product.description}</Text>
+            <Text style={[styles.descriptionTitle, { color: colors.text }]}>Ürün Açıklaması</Text>
+            <Text style={[styles.descriptionText, { color: colors.textSecondary }]}>{product.description}</Text>
           </View>
         )}
       </View>
@@ -129,7 +134,8 @@ export default function ProductDetailScreen() {
       <Pressable 
         style={[
           styles.addToCartButton,
-          !product.inStock && styles.addToCartButtonDisabled
+          { backgroundColor: colors.primary, shadowColor: colors.primary },
+          !product.inStock && { backgroundColor: colors.textSecondary, shadowOpacity: 0, elevation: 0 }
         ]}
         onPress={onAddToCart}
         disabled={!product.inStock}
@@ -150,7 +156,6 @@ export default function ProductDetailScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
   },
   contentContainer: {
     padding: 16,
@@ -160,22 +165,18 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
-    backgroundColor: '#fff',
   },
   errorText: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#dc2626',
     marginBottom: 8,
   },
   errorSubtext: {
     fontSize: 14,
-    color: '#6b7280',
     marginBottom: 8,
   },
   errorHelp: {
     fontSize: 14,
-    color: '#6b7280',
     textAlign: 'center',
   },
   productImage: {
@@ -189,13 +190,11 @@ const styles = StyleSheet.create({
     height: 250,
     borderRadius: 12,
     marginBottom: 16,
-    backgroundColor: '#f3f4f6',
     justifyContent: 'center',
     alignItems: 'center',
   },
   placeholderText: {
     fontSize: 16,
-    color: '#9ca3af',
   },
   productInfo: {
     marginBottom: 24,
@@ -203,7 +202,6 @@ const styles = StyleSheet.create({
   productName: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#1f2937',
     marginBottom: 12,
     lineHeight: 32,
   },
@@ -212,8 +210,6 @@ const styles = StyleSheet.create({
   },
   categoryText: {
     fontSize: 14,
-    color: '#007AFF',
-    backgroundColor: '#f0f8ff',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 16,
@@ -232,12 +228,10 @@ const styles = StyleSheet.create({
   priceText: {
     fontSize: 28,
     fontWeight: '800',
-    color: '#10b981',
     marginBottom: 4,
   },
   priceSubtext: {
     fontSize: 14,
-    color: '#6b7280',
     fontStyle: 'italic',
   },
   stockContainer: {
@@ -260,18 +254,15 @@ const styles = StyleSheet.create({
     gap: 8,
     marginBottom: 16,
     padding: 12,
-    backgroundColor: '#fef3c7',
     borderRadius: 8,
   },
   moqLabel: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#92400e',
   },
   moqText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#92400e',
   },
   mpnContainer: {
     flexDirection: 'row',
@@ -282,12 +273,10 @@ const styles = StyleSheet.create({
   mpnLabel: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#6b7280',
   },
   mpnText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#374151',
   },
   descriptionContainer: {
     marginBottom: 16,
@@ -295,21 +284,17 @@ const styles = StyleSheet.create({
   descriptionTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#374151',
     marginBottom: 8,
   },
   descriptionText: {
     fontSize: 14,
-    color: '#6b7280',
     lineHeight: 22,
   },
   addToCartButton: {
-    backgroundColor: '#007AFF',
     paddingVertical: 16,
     paddingHorizontal: 24,
     borderRadius: 12,
     alignItems: 'center',
-    shadowColor: '#007AFF',
     shadowOffset: {
       width: 0,
       height: 2,
@@ -319,7 +304,6 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   addToCartButtonDisabled: {
-    backgroundColor: '#9ca3af',
     shadowOpacity: 0,
     elevation: 0,
   },

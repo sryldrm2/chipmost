@@ -1,6 +1,7 @@
 import React from 'react';
 import { ActivityIndicator, Alert, Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
+import { useTheme } from '../../context/ThemeContext';
 import { useCart } from '../../cart/CartContext';
 
 type RouteParams = { productId?: string };
@@ -45,6 +46,7 @@ function tl(v: number) { return new Intl.NumberFormat('tr-TR', { style: 'currenc
 export default function ProductDetailScreen() {
   const nav = useNavigation<any>();
   const { params } = useRoute<any>();
+  const { colors } = useTheme();
   const { productId } = (params as RouteParams) || {};
   const { addItem } = useCart();
 
@@ -83,36 +85,38 @@ export default function ProductDetailScreen() {
   // --- UI states ---
   if (!productId || productId.trim() === '') {
     return (
-      <View style={styles.center}>
-        <Text style={styles.err}>Geçersiz bağlantı</Text>
+      <View style={[styles.center, { backgroundColor: colors.background }]}>
+        <Text style={[styles.err, { color: colors.error }]}>Geçersiz bağlantı</Text>
       </View>
     ); // Deep Link Guard (invalid id)
   }
   if (loading) {
     return (
-      <View style={styles.center}>
-        <ActivityIndicator />
-        <Text style={styles.muted}>Ürün yükleniyor...</Text>
+      <View style={[styles.center, { backgroundColor: colors.background }]}>
+        <ActivityIndicator color={colors.primary} />
+        <Text style={[styles.muted, { color: colors.textSecondary }]}>Ürün yükleniyor...</Text>
       </View>
     ); // Loading
   }
   if (error) {
     return (
-      <View style={styles.center}>
-        <Text style={styles.err}>{error}</Text>
-        <Pressable style={styles.btn} onPress={load}><Text style={styles.btnText}>Tekrar Dene</Text></Pressable>
+      <View style={[styles.center, { backgroundColor: colors.background }]}>
+        <Text style={[styles.err, { color: colors.error }]}>{error}</Text>
+        <Pressable style={[styles.btn, { backgroundColor: colors.primary }]} onPress={load}>
+          <Text style={[styles.btnText, { color: colors.buttonText }]}>Tekrar Dene</Text>
+        </Pressable>
       </View>
     ); // Error
   }
   if (!item) {
     return (
-      <View style={styles.center}>
-        <Text style={styles.muted}>Ürün bulunamadı</Text>
+      <View style={[styles.center, { backgroundColor: colors.background }]}>
+        <Text style={[styles.muted, { color: colors.textSecondary }]}>Ürün bulunamadı</Text>
         <Pressable
-          style={[styles.btn, styles.secondary]}
+          style={[styles.btn, styles.secondary, { backgroundColor: colors.primaryLight }]}
           onPress={() => nav.reset({ index: 0, routes: [{ name: 'CatalogHome' }] })}
         >
-          <Text style={styles.secondaryText}>Kataloğa Dön</Text>
+          <Text style={[styles.secondaryText, { color: colors.primary }]}>Kataloğa Dön</Text>
         </Pressable>
       </View>
     ); // Not Found
@@ -146,9 +150,9 @@ export default function ProductDetailScreen() {
   const share = () => Alert.alert('Paylaş', 'Paylaşım bağlantısı kopyalandı: chipmost://product/' + item.id);
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <ScrollView contentContainerStyle={[styles.container, { backgroundColor: colors.background }]}>
       {/* Görsel */}
-      <View style={styles.hero}>
+      <View style={[styles.hero, { backgroundColor: colors.surface }]}>
         {item.thumbnail ? (
           <Image source={{ uri: item.thumbnail }} style={styles.heroImg} />
         ) : (
@@ -158,13 +162,21 @@ export default function ProductDetailScreen() {
 
       {/* Üst Bilgi */}
       <View style={styles.row}>
-        {!!item.category && <Text style={styles.chip}>{item.category}</Text>}
-        <Text style={styles.price}>{tl(item.price)}</Text>
+        {!!item.category && (
+          <Text style={[styles.chip, { 
+            color: colors.primary, 
+            backgroundColor: colors.primaryLight 
+          }]}>{item.category}</Text>
+        )}
+        <Text style={[styles.price, { color: colors.success }]}>{tl(item.price)}</Text>
       </View>
 
-      <Text style={styles.title}>{item.name}</Text>
-      <Text style={styles.desc}>{item.desc}</Text>
-      <Text style={[styles.stock, item.inStock ? styles.stockOk : styles.stockNo]}>
+      <Text style={[styles.title, { color: colors.text }]}>{item.name}</Text>
+      <Text style={[styles.desc, { color: colors.textSecondary }]}>{item.desc}</Text>
+      <Text style={[
+        styles.stock, 
+        item.inStock ? { color: colors.success } : { color: colors.error }
+      ]}>
         {item.inStock ? '✓ Stokta' : '✗ Stok Yok'}
       </Text>
 
@@ -173,22 +185,23 @@ export default function ProductDetailScreen() {
         <Pressable 
           style={[
             styles.actBtn, 
-            item.inStock ? styles.primary : styles.disabled
+            { borderColor: colors.border },
+            item.inStock ? { backgroundColor: colors.primary, borderColor: colors.primary } : { backgroundColor: colors.surface, borderColor: colors.border }
           ]} 
           onPress={addToCart}
           disabled={!item.inStock}
         >
           <Text style={[
-            item.inStock ? styles.actTextPrimary : styles.actTextDisabled
+            item.inStock ? { color: colors.buttonText, fontWeight: '800' } : { color: colors.textSecondary, fontWeight: '700' }
           ]}>
             {item.inStock ? 'Sepete Ekle' : 'Stokta Yok'}
           </Text>
         </Pressable>
-        <Pressable style={styles.actBtn} onPress={() => setFav((x) => !x)}>
-          <Text style={styles.actText}>{fav ? '★ Favoride' : '☆ Favori'}</Text>
+        <Pressable style={[styles.actBtn, { borderColor: colors.border }]} onPress={() => setFav((x) => !x)}>
+          <Text style={[styles.actText, { color: colors.text }]}>{fav ? '★ Favoride' : '☆ Favori'}</Text>
         </Pressable>
-        <Pressable style={styles.actBtn} onPress={share}>
-          <Text style={styles.actText}>Paylaş</Text>
+        <Pressable style={[styles.actBtn, { borderColor: colors.border }]} onPress={share}>
+          <Text style={[styles.actText, { color: colors.text }]}>Paylaş</Text>
         </Pressable>
       </View>
     </ScrollView>
@@ -196,34 +209,32 @@ export default function ProductDetailScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { padding: 16, backgroundColor: '#fff', gap: 10 },
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12, backgroundColor: '#fff', padding: 24 },
-  muted: { color: '#666' },
-  err: { color: '#dc3545', fontWeight: '700' },
-  btn: { backgroundColor: '#111', paddingHorizontal: 16, paddingVertical: 10, borderRadius: 12 },
-  btnText: { color: '#fff', fontWeight: '700' },
-  secondary: { backgroundColor: '#e7f1ff' },
-  secondaryText: { color: '#0a58ca', fontWeight: '700' },
+  container: { padding: 16, gap: 10 },
+  center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12, padding: 24 },
+  muted: { fontWeight: '500' },
+  err: { fontWeight: '700' },
+  btn: { paddingHorizontal: 16, paddingVertical: 10, borderRadius: 12 },
+  btnText: { fontWeight: '700' },
+  secondary: { backgroundColor: 'transparent' },
+  secondaryText: { fontWeight: '700' },
 
-  hero: { height: 220, borderRadius: 16, overflow: 'hidden', backgroundColor: '#f5f5f5' },
+  hero: { height: 220, borderRadius: 16, overflow: 'hidden' },
   heroImg: { width: '100%', height: '100%' },
   heroPlaceholder: { flex: 1, alignItems: 'center', justifyContent: 'center' },
 
   row: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  chip: { fontSize: 12, color: '#0a58ca', backgroundColor: '#e7f1ff', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 999 },
-  price: { marginLeft: 'auto', fontSize: 18, fontWeight: '800', color: '#198754' },
+  chip: { fontSize: 12, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 999 },
+  price: { marginLeft: 'auto', fontSize: 18, fontWeight: '800' },
 
   title: { fontSize: 20, fontWeight: '800' },
-  desc: { fontSize: 13, color: '#555' },
+  desc: { fontSize: 13 },
   stock: { fontSize: 12, fontWeight: '700', marginTop: 2 },
-  stockOk: { color: '#198754' },
-  stockNo: { color: '#dc3545' },
 
   actions: { flexDirection: 'row', gap: 8, marginTop: 8 },
-  actBtn: { borderWidth: 1, borderColor: '#e3e3e7', borderRadius: 12, paddingHorizontal: 12, paddingVertical: 10 },
-  primary: { backgroundColor: '#111', borderColor: '#111' },
-  disabled: { backgroundColor: '#f5f5f5', borderColor: '#e3e3e7' },
-  actText: { fontWeight: '700', color: '#333' },
-  actTextPrimary: { fontWeight: '800', color: '#fff' },
-  actTextDisabled: { fontWeight: '700', color: '#999' },
+  actBtn: { borderWidth: 1, borderRadius: 12, paddingHorizontal: 12, paddingVertical: 10 },
+  primary: { },
+  disabled: { },
+  actText: { fontWeight: '700' },
+  actTextPrimary: { fontWeight: '800' },
+  actTextDisabled: { fontWeight: '700' },
 });

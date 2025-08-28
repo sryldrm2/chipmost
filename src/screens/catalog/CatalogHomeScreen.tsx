@@ -36,9 +36,6 @@ export default function CatalogHomeScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <Text style={[styles.title, { color: colors.text }]}>Chipmost – Katalog</Text>
-      <Text style={[styles.sub, { color: colors.textSecondary }]}>Kategori seçerek ürünlere ilerle</Text>
-
       <ScrollView 
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}

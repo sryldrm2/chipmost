@@ -93,7 +93,6 @@ export default function CartScreen() {
         keyExtractor={(item) => item.id}
         ListHeaderComponent={
           <View style={styles.header}>
-            <Text style={[styles.title, { color: colors.text }]}>Sepetim</Text>
             <View style={[styles.badge, { backgroundColor: colors.primary }]}>
               <Text style={[styles.badgeText, { color: colors.buttonText }]}>
                 {totalCount} ürün

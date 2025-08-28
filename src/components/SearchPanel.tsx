@@ -38,7 +38,6 @@ export default function SearchPanel({ onSearch, isLoading }: SearchPanelProps) {
     <View style={[styles.container, { backgroundColor: colors.primary }]}>
       {/* Hero Section */}
       <View style={styles.heroSection}>
-        <Text style={styles.heroTitle}>Ana Sayfa</Text>
         <Text style={styles.heroSubtitle}>
           Digi-Key, Mouser, Farnell ve LCSC'de parça numarası ile arama yapın
         </Text>
@@ -123,13 +122,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 20,
     paddingBottom: 30,
-  },
-  heroTitle: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: '#fff',
-    marginBottom: 8,
-    textAlign: 'center',
   },
   heroSubtitle: {
     fontSize: 16,

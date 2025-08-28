@@ -134,7 +134,9 @@ export default function ProductList() {
     return (
       <View style={[styles.center, { backgroundColor: colors.background }]}>
         <Text style={[styles.err, { color: colors.error }]}>{error}</Text>
-        <Pressable style={[styles.btn, { backgroundColor: colors.buttonPrimary }]} onPress={load}><Text style={[styles.btnText, { color: colors.buttonText }]}>Tekrar dene</Text></Pressable>
+        <Pressable style={[styles.btn, { backgroundColor: colors.primary }]} onPress={load}>
+          <Text style={[styles.btnText, { color: colors.buttonText }]}>Tekrar dene</Text>
+        </Pressable>
       </View>
     ); // Error  (UX CILA)
   }
@@ -153,58 +155,71 @@ export default function ProductList() {
   }
 
   return (
-    <FlatList
-      data={sorted}
-      keyExtractor={(x) => x.id}
-      contentContainerStyle={{ padding: 16 }}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-      ListHeaderComponent={
-        <View style={styles.header}>
-          <Text style={[styles.hTitle, { color: colors.text }]}>Chipmost – Ürünler</Text>
-          <View style={styles.hRow}>
-            <Text style={[styles.badge, { color: colors.primary, backgroundColor: colors.surface }]}>{sorted.length} ürün</Text>
-            <Text style={[styles.hHint, { color: colors.textSecondary }]}>Sırala:</Text>
-            {(['relevance', 'priceAsc', 'priceDesc', 'nameAsc'] as SortKey[]).map((k) => (
-              <Pressable key={k} onPress={() => setSort(k)} style={[
-                styles.pill, 
-                { borderColor: colors.border },
-                sort === k && { backgroundColor: colors.primary + '22', borderColor: colors.primary }
-              ]}>
-                <Text style={[
-                  styles.pillText, 
-                  { color: colors.text },
-                  sort === k && { color: colors.primary, fontWeight: '700' }
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <FlatList
+        data={sorted}
+        keyExtractor={(x) => x.id}
+        contentContainerStyle={{ padding: 16 }}
+        refreshControl={
+          <RefreshControl 
+            refreshing={refreshing} 
+            onRefresh={onRefresh}
+            colors={[colors.primary]}
+            tintColor={colors.primary}
+          />
+        }
+        ListHeaderComponent={
+          <View style={styles.header}>
+            <Text style={[styles.hTitle, { color: colors.text }]}>Chipmost – Ürünler</Text>
+            <View style={styles.hRow}>
+              <Text style={[styles.badge, { 
+                color: colors.primary, 
+                backgroundColor: colors.primaryLight 
+              }]}>{sorted.length} ürün</Text>
+              <Text style={[styles.hHint, { color: colors.textSecondary }]}>Sırala:</Text>
+              {(['relevance', 'priceAsc', 'priceDesc', 'nameAsc'] as SortKey[]).map((k) => (
+                <Pressable key={k} onPress={() => setSort(k)} style={[
+                  styles.pill, 
+                  { borderColor: colors.border },
+                  sort === k && { backgroundColor: colors.primary + '22', borderColor: colors.primary }
                 ]}>
-                  {k === 'relevance' ? 'Uygunluk' : k === 'priceAsc' ? `Fiyat ↑` : k === 'priceDesc' ? `Fiyat ↓` : 'Ad A→Z'}
-                </Text>
-              </Pressable>
-            ))}
+                  <Text style={[
+                    styles.pillText, 
+                    { color: colors.text },
+                    sort === k && { color: colors.primary, fontWeight: '700' }
+                  ]}>
+                    {k === 'relevance' ? 'Uygunluk' : k === 'priceAsc' ? `Fiyat ↑` : k === 'priceDesc' ? `Fiyat ↓` : 'Ad A→Z'}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
           </View>
-        </View>
-      }
-      renderItem={({ item }) => (
-        <ProductCard
-          id={item.id}
-          name={item.name}
-          desc={item.desc}
-          price={item.price}
-          category={item.category}
-          inStock={item.inStock}
-          thumbnail={item.thumbnail}
-          onPress={(id) => nav.navigate('ProductDetail', { productId: id })}
-        />
-      )}
-    />
+        }
+        renderItem={({ item }) => (
+          <ProductCard
+            id={item.id}
+            name={item.name}
+            desc={item.desc}
+            price={item.price}
+            category={item.category}
+            inStock={item.inStock}
+            thumbnail={item.thumbnail}
+            onPress={(id) => nav.navigate('ProductDetail', { productId: id })}
+          />
+        )}
+      />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  container: { flex: 1 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12, padding: 24 },
-  muted: { },
+  muted: { fontWeight: '500' },
   err: { fontWeight: '700' },
   btn: { paddingHorizontal: 16, paddingVertical: 10, borderRadius: 12 },
   btnText: { fontWeight: '700' },
-  secondary: { },
+  secondary: { backgroundColor: 'transparent' },
   secondaryText: { fontWeight: '700' },
 
   header: { marginBottom: 12 },

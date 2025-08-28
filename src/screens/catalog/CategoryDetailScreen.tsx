@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
+import { useTheme } from '../../context/ThemeContext';
 import InfoBanner from '../../components/InfoBanner';
 
 type Mode = 'subs' | 'products';
@@ -61,6 +62,7 @@ function fetchSubcategoriesMock(categoryId: string): Promise<Subcat[]> {
 // products moduna girerken kullanıcıya bilgi mesajı göster
 function ProductsTransition({ categoryId }: { categoryId: string }) {
   const nav = useNavigation<any>();
+  const { colors } = useTheme();
   
   React.useEffect(() => {
     // 100ms sonra ProductList'e replace (stack şişmez) - Akış A
@@ -71,7 +73,7 @@ function ProductsTransition({ categoryId }: { categoryId: string }) {
   }, [categoryId]);
 
   return (
-    <View style={styles.center}>
+    <View style={[styles.center, { backgroundColor: colors.background }]}>
       <InfoBanner text="Alt kategori bulunamadı, ürünler listeleniyor…" />
     </View>
   );
@@ -80,6 +82,7 @@ function ProductsTransition({ categoryId }: { categoryId: string }) {
 export default function CategoryDetailScreen() {
   const nav = useNavigation<any>();
   const route = useRoute<any>();
+  const { colors } = useTheme();
   const { categoryId, mode: initialMode }: RouteParams = route.params ?? {};
   const [mode, setMode] = useState<Mode>(initialMode ?? 'subs');
 
@@ -137,28 +140,35 @@ export default function CategoryDetailScreen() {
         // Alt kategori → aynı ekrana replace (derinleşme)
         nav.replace('CategoryDetail', { categoryId: item.id, mode: 'subs' });
       }}
-      style={({ pressed }) => [styles.card, { transform: [{ scale: pressed ? 0.98 : 1 }] }]}
+      style={({ pressed }) => [styles.card, { 
+        backgroundColor: colors.surface,
+        transform: [{ scale: pressed ? 0.98 : 1 }] 
+      }]}
     >
       <Text style={styles.emoji}>{item.emoji || '📦'}</Text>
-      <Text style={styles.cardTitle}>{item.title}</Text>
+      <Text style={[styles.cardTitle, { color: colors.text }]}>{item.title}</Text>
     </Pressable>
   );
 
   // --- UI STATES ---
   if (loading) {
     return (
-      <View style={styles.center}>
-        <ActivityIndicator />
-        <Text style={styles.muted}>Yükleniyor...</Text>
+      <View style={[styles.center, { backgroundColor: colors.background }]}>
+        <ActivityIndicator color={colors.primary} />
+        <Text style={[styles.muted, { color: colors.textSecondary }]}>Yükleniyor...</Text>
       </View>
     );
   }
   if (error) {
     return (
-      <View style={styles.center}>
-        <Text style={styles.err}>Hata: {error}</Text>
-        <Pressable onPress={onRetry} style={styles.btn}><Text style={styles.btnText}>Tekrar Dene</Text></Pressable>
-        <Pressable onPress={goBackSafe} style={[styles.btn, styles.secondary]}><Text style={styles.secondaryText}>Kataloğa Dön</Text></Pressable>
+      <View style={[styles.center, { backgroundColor: colors.background }]}>
+        <Text style={[styles.err, { color: colors.error }]}>Hata: {error}</Text>
+        <Pressable onPress={onRetry} style={[styles.btn, { backgroundColor: colors.primary }]}>
+          <Text style={[styles.btnText, { color: colors.buttonText }]}>Tekrar Dene</Text>
+        </Pressable>
+        <Pressable onPress={goBackSafe} style={[styles.btn, styles.secondary, { backgroundColor: colors.primaryLight }]}>
+          <Text style={[styles.secondaryText, { color: colors.primary }]}>Kataloğa Dön</Text>
+        </Pressable>
       </View>
     );
   }
@@ -170,9 +180,12 @@ export default function CategoryDetailScreen() {
 
   // subs modu (liste)
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>{title}</Text>
-      <Text style={styles.badge}>{items.length} alt kategori</Text>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <Text style={[styles.title, { color: colors.text }]}>{title}</Text>
+      <Text style={[styles.badge, { 
+        color: colors.primary, 
+        backgroundColor: colors.primaryLight 
+      }]}>{items.length} alt kategori</Text>
       <FlatList
         ref={listRef}
         data={items}
@@ -187,17 +200,17 @@ export default function CategoryDetailScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
+  container: { flex: 1 },
   title: { fontSize: 20, fontWeight: '800', paddingHorizontal: 16, paddingTop: 16 },
-  badge: { marginTop: 6, marginLeft: 16, alignSelf: 'flex-start', fontSize: 12, color: '#0a58ca', backgroundColor: '#e7f1ff', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 999 },
-  card: { flex: 1, backgroundColor: '#f7f7f9', borderRadius: 16, padding: 14, minHeight: 110, marginBottom: 12 },
+  badge: { marginTop: 6, marginLeft: 16, alignSelf: 'flex-start', fontSize: 12, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 999 },
+  card: { flex: 1, borderRadius: 16, padding: 14, minHeight: 110, marginBottom: 12 },
   emoji: { fontSize: 24, marginBottom: 6 },
   cardTitle: { fontSize: 15, fontWeight: '700' },
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24, gap: 12, backgroundColor: '#fff' },
-  muted: { color: '#666' },
-  err: { color: '#dc3545', fontWeight: '700' },
-  btn: { backgroundColor: '#111', paddingHorizontal: 16, paddingVertical: 10, borderRadius: 12 },
-  btnText: { color: '#fff', fontWeight: '700' },
-  secondary: { backgroundColor: '#e7f1ff' },
-  secondaryText: { color: '#0a58ca', fontWeight: '700' },
+  center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24, gap: 12 },
+  muted: { fontWeight: '500' },
+  err: { fontWeight: '700' },
+  btn: { paddingHorizontal: 16, paddingVertical: 10, borderRadius: 12 },
+  btnText: { fontWeight: '700' },
+  secondary: { backgroundColor: 'transparent' },
+  secondaryText: { fontWeight: '700' },
 });
