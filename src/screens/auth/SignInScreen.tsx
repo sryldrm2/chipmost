@@ -13,10 +13,12 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
+import { useTheme } from '../../context/ThemeContext';
 
 export default function SignInScreen() {
   const navigation = useNavigation<any>();
   const { signIn } = useAuth();
+  const { colors } = useTheme();
   
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -87,32 +89,37 @@ export default function SignInScreen() {
   const clearError = () => setError('');
 
   return (
-    <KeyboardAvoidingView style={styles.container} behavior="padding">
+    <KeyboardAvoidingView style={[styles.container, { backgroundColor: colors.background }]} behavior="padding">
       <ScrollView 
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
       >
         <View style={styles.header}>
-          <Text style={styles.title}>Hoş Geldiniz</Text>
-          <Text style={styles.subtitle}>Chipmost hesabınıza giriş yapın</Text>
+          <Text style={[styles.title, { color: colors.text }]}>Hoş Geldiniz</Text>
+          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Chipmost hesabınıza giriş yapın</Text>
         </View>
 
         {error ? (
-          <View style={styles.errorContainer}>
+          <View style={[styles.errorContainer, { backgroundColor: colors.error }]}>
             <Text style={styles.errorText}>{error}</Text>
             <Pressable onPress={clearError} style={styles.errorClose}>
-              <Ionicons name="close" size={20} color="#fff" />
+              <Ionicons name="close" size={20} color={colors.buttonText} />
             </Pressable>
           </View>
         ) : null}
 
         <View style={styles.form}>
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>E-posta</Text>
+            <Text style={[styles.label, { color: colors.text }]}>E-posta</Text>
             <TextInput
               ref={emailRef}
-              style={styles.input}
+              style={[styles.input, { 
+                borderColor: colors.border, 
+                backgroundColor: colors.surface,
+                color: colors.text
+              }]}
               placeholder="ornek@email.com"
+              placeholderTextColor={colors.textMuted}
               value={email}
               onChangeText={setEmail}
               keyboardType="email-address"
@@ -125,12 +132,16 @@ export default function SignInScreen() {
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Parola</Text>
-            <View style={styles.passwordContainer}>
+            <Text style={[styles.label, { color: colors.text }]}>Parola</Text>
+            <View style={[styles.passwordContainer, { 
+              borderColor: colors.border, 
+              backgroundColor: colors.surface 
+            }]}>
               <TextInput
                 ref={passwordRef}
-                style={styles.passwordInput}
+                style={[styles.passwordInput, { color: colors.text }]}
                 placeholder="Parolanızı girin"
+                placeholderTextColor={colors.textMuted}
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry={!showPassword}
@@ -146,7 +157,7 @@ export default function SignInScreen() {
                 <Ionicons
                   name={showPassword ? 'eye-off' : 'eye'}
                   size={20}
-                  color="#666"
+                  color={colors.textMuted}
                 />
               </Pressable>
             </View>
@@ -157,41 +168,45 @@ export default function SignInScreen() {
             onPress={() => navigation.navigate('ForgotPassword')}
             disabled={isLoading}
           >
-            <Text style={styles.forgotPasswordText}>Parolamı unuttum</Text>
+            <Text style={[styles.forgotPasswordText, { color: colors.primary }]}>Parolamı unuttum</Text>
           </Pressable>
 
           <Pressable
             style={[
               styles.signInButton,
+              { backgroundColor: colors.primary },
               (!email.trim() || !password.trim() || isLoading) && styles.signInButtonDisabled
             ]}
             onPress={handleSignIn}
             disabled={!email.trim() || !password.trim() || isLoading}
           >
             {isLoading ? (
-              <ActivityIndicator color="#fff" size="small" />
+              <ActivityIndicator color={colors.buttonText} size="small" />
             ) : (
-              <Text style={styles.signInButtonText}>Giriş Yap</Text>
+              <Text style={[styles.signInButtonText, { color: colors.buttonText }]}>Giriş Yap</Text>
             )}
           </Pressable>
 
           <View style={styles.divider}>
-            <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>veya</Text>
-            <View style={styles.dividerLine} />
+            <View style={[styles.dividerLine, { backgroundColor: colors.divider }]} />
+            <Text style={[styles.dividerText, { color: colors.textMuted }]}>veya</Text>
+            <View style={[styles.dividerLine, { backgroundColor: colors.divider }]} />
           </View>
 
           <Pressable
-            style={styles.signUpButton}
+            style={[styles.signUpButton, { 
+              borderColor: colors.border,
+              backgroundColor: colors.surface
+            }]}
             onPress={() => navigation.navigate('SignUp')}
             disabled={isLoading}
           >
-            <Text style={styles.signUpButtonText}>Hesap Oluştur</Text>
+            <Text style={[styles.signUpButtonText, { color: colors.text }]}>Hesap Oluştur</Text>
           </Pressable>
         </View>
 
         <View style={styles.footer}>
-          <Text style={styles.footerText}>
+          <Text style={[styles.footerText, { color: colors.textMuted }]}>
             Demo hesap: demo@chipmost.com / demo123
           </Text>
         </View>
@@ -203,7 +218,6 @@ export default function SignInScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
   },
   scrollContent: {
     flexGrow: 1,
@@ -217,16 +231,13 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: '800',
-    color: '#111',
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 16,
-    color: '#666',
     textAlign: 'center',
   },
   errorContainer: {
-    backgroundColor: '#dc3545',
     padding: 12,
     borderRadius: 8,
     flexDirection: 'row',
@@ -251,24 +262,19 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#333',
   },
   input: {
     borderWidth: 1,
-    borderColor: '#e3e3e7',
     borderRadius: 8,
     paddingHorizontal: 16,
     paddingVertical: 12,
     fontSize: 16,
-    backgroundColor: '#fff',
   },
   passwordContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#e3e3e7',
     borderRadius: 8,
-    backgroundColor: '#fff',
   },
   passwordInput: {
     flex: 1,
@@ -283,12 +289,10 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-end',
   },
   forgotPasswordText: {
-    color: '#0a58ca',
     fontSize: 14,
     fontWeight: '600',
   },
   signInButton: {
-    backgroundColor: '#111',
     paddingVertical: 16,
     borderRadius: 8,
     alignItems: 'center',
@@ -298,7 +302,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#ccc',
   },
   signInButtonText: {
-    color: '#fff',
     fontSize: 16,
     fontWeight: '700',
   },
@@ -310,22 +313,18 @@ const styles = StyleSheet.create({
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: '#e3e3e7',
   },
   dividerText: {
     marginHorizontal: 16,
-    color: '#666',
     fontSize: 14,
   },
   signUpButton: {
     borderWidth: 1,
-    borderColor: '#111',
     paddingVertical: 16,
     borderRadius: 8,
     alignItems: 'center',
   },
   signUpButtonText: {
-    color: '#111',
     fontSize: 16,
     fontWeight: '700',
   },
@@ -334,7 +333,6 @@ const styles = StyleSheet.create({
     marginTop: 32,
   },
   footerText: {
-    color: '#666',
     fontSize: 12,
     textAlign: 'center',
   },

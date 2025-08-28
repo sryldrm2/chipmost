@@ -13,10 +13,12 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
+import { useTheme } from '../../context/ThemeContext';
 
 export default function SignUpScreen() {
   const navigation = useNavigation<any>();
   const { signUp } = useAuth();
+  const { colors } = useTheme();
   
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -142,21 +144,21 @@ export default function SignUpScreen() {
   const clearError = () => setError('');
 
   return (
-    <KeyboardAvoidingView style={styles.container} behavior="padding">
+    <KeyboardAvoidingView style={[styles.container, { backgroundColor: colors.background }]} behavior="padding">
       <ScrollView 
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
       >
         <View style={styles.header}>
-          <Text style={styles.title}>Hesap Oluştur</Text>
-          <Text style={styles.subtitle}>Chipmost'a katılmak için bilgilerinizi girin</Text>
+          <Text style={[styles.title, { color: colors.text }]}>Hesap Oluştur</Text>
+          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Chipmost'a katılmak için bilgilerinizi girin</Text>
         </View>
 
         {error ? (
-          <View style={styles.errorContainer}>
-            <Text style={styles.errorText}>{error}</Text>
+          <View style={[styles.errorContainer, { backgroundColor: colors.errorBackground }]}>
+            <Text style={[styles.errorText, { color: colors.error }]}>{error}</Text>
             <Pressable onPress={clearError} style={styles.errorClose}>
-              <Ionicons name="close" size={20} color="#fff" />
+              <Ionicons name="close" size={20} color={colors.buttonText} />
             </Pressable>
           </View>
         ) : null}
@@ -164,11 +166,16 @@ export default function SignUpScreen() {
         <View style={styles.form}>
           <View style={styles.nameRow}>
             <View style={[styles.inputGroup, { flex: 1 }]}>
-              <Text style={styles.label}>Ad</Text>
+              <Text style={[styles.label, { color: colors.text }]}>Ad</Text>
               <TextInput
                 ref={firstNameRef}
-                style={styles.input}
+                style={[styles.input, { 
+                  borderColor: colors.border, 
+                  backgroundColor: colors.surface,
+                  color: colors.text 
+                }]}
                 placeholder="Adınız"
+                placeholderTextColor={colors.textMuted}
                 value={firstName}
                 onChangeText={setFirstName}
                 autoCapitalize="words"
@@ -179,11 +186,16 @@ export default function SignUpScreen() {
             </View>
             
             <View style={[styles.inputGroup, { flex: 1, marginLeft: 12 }]}>
-              <Text style={styles.label}>Soyad</Text>
+              <Text style={[styles.label, { color: colors.text }]}>Soyad</Text>
               <TextInput
                 ref={lastNameRef}
-                style={styles.input}
+                style={[styles.input, { 
+                  borderColor: colors.border, 
+                  backgroundColor: colors.surface,
+                  color: colors.text 
+                }]}
                 placeholder="Soyadınız"
+                placeholderTextColor={colors.textMuted}
                 value={lastName}
                 onChangeText={setLastName}
                 autoCapitalize="words"
@@ -195,11 +207,16 @@ export default function SignUpScreen() {
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>E-posta</Text>
+            <Text style={[styles.label, { color: colors.text }]}>E-posta</Text>
             <TextInput
               ref={emailRef}
-              style={styles.input}
+              style={[styles.input, { 
+                borderColor: colors.border, 
+                backgroundColor: colors.surface,
+                color: colors.text 
+              }]}
               placeholder="ornek@email.com"
+              placeholderTextColor={colors.textMuted}
               value={email}
               onChangeText={setEmail}
               keyboardType="email-address"
@@ -212,12 +229,16 @@ export default function SignUpScreen() {
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Parola</Text>
-            <View style={styles.passwordContainer}>
+            <Text style={[styles.label, { color: colors.text }]}>Parola</Text>
+            <View style={[styles.passwordContainer, { 
+              borderColor: colors.border, 
+              backgroundColor: colors.surface 
+            }]}>
               <TextInput
                 ref={passwordRef}
-                style={styles.passwordInput}
+                style={[styles.passwordInput, { color: colors.text }]}
                 placeholder="En az 6 karakter"
+                placeholderTextColor={colors.textMuted}
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry={!showPassword}
@@ -233,22 +254,26 @@ export default function SignUpScreen() {
                 <Ionicons
                   name={showPassword ? 'eye-off' : 'eye'}
                   size={20}
-                  color="#666"
+                  color={colors.textMuted}
                 />
               </Pressable>
             </View>
-            <Text style={styles.passwordHint}>
+            <Text style={[styles.passwordHint, { color: colors.textMuted }]}>
               En az 6 karakter, sayı ve harf kombinasyonu
             </Text>
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Parola Doğrulama</Text>
-            <View style={styles.passwordContainer}>
+            <Text style={[styles.label, { color: colors.text }]}>Parola Doğrulama</Text>
+            <View style={[styles.passwordContainer, { 
+              borderColor: colors.border, 
+              backgroundColor: colors.surface 
+            }]}>
               <TextInput
                 ref={confirmPasswordRef}
-                style={styles.passwordInput}
+                style={[styles.passwordInput, { color: colors.text }]}
                 placeholder="Parolanızı tekrar girin"
+                placeholderTextColor={colors.textMuted}
                 value={confirmPassword}
                 onChangeText={setConfirmPassword}
                 secureTextEntry={!showConfirmPassword}
@@ -263,7 +288,7 @@ export default function SignUpScreen() {
                 <Ionicons
                   name={showConfirmPassword ? 'eye-off' : 'eye'}
                   size={20}
-                  color="#666"
+                  color={colors.textMuted}
                 />
               </Pressable>
             </View>
@@ -278,45 +303,49 @@ export default function SignUpScreen() {
               <Ionicons
                 name={acceptTerms ? 'checkbox' : 'square-outline'}
                 size={20}
-                color={acceptTerms ? '#0a58ca' : '#666'}
+                color={acceptTerms ? colors.primary : colors.textMuted}
               />
             </Pressable>
-            <Text style={styles.termsText}>
-              <Text style={styles.termsLink}>Kullanım şartlarını</Text> ve{' '}
-              <Text style={styles.termsLink}>gizlilik politikasını</Text> kabul ediyorum
+            <Text style={[styles.termsText, { color: colors.text }]}>
+              <Text style={[styles.termsLink, { color: colors.primary }]}>Kullanım şartlarını</Text> ve{' '}
+              <Text style={[styles.termsLink, { color: colors.primary }]}>gizlilik politikasını</Text> kabul ediyorum
             </Text>
           </View>
 
           <Pressable
             style={[
               styles.signUpButton,
+              { backgroundColor: colors.primary },
               (!firstName.trim() || !lastName.trim() || !email.trim() || 
                !password.trim() || !confirmPassword.trim() || !acceptTerms || isLoading) && 
                styles.signUpButtonDisabled
             ]}
             onPress={handleSignUp}
-            disabled={!firstName.trim() || !lastName.trim() || !email.trim() || 
+            disabled={!firstName.trim() || !email.trim() || 
                      !password.trim() || !confirmPassword.trim() || !acceptTerms || isLoading}
           >
             {isLoading ? (
-              <ActivityIndicator color="#fff" size="small" />
+              <ActivityIndicator color={colors.buttonText} size="small" />
             ) : (
-              <Text style={styles.signUpButtonText}>Hesap Oluştur</Text>
+              <Text style={[styles.signUpButtonText, { color: colors.buttonText }]}>Hesap Oluştur</Text>
             )}
           </Pressable>
 
           <View style={styles.divider}>
-            <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>veya</Text>
-            <View style={styles.dividerLine} />
+            <View style={[styles.dividerLine, { backgroundColor: colors.divider }]} />
+            <Text style={[styles.dividerText, { color: colors.textMuted }]}>veya</Text>
+            <View style={[styles.dividerLine, { backgroundColor: colors.divider }]} />
           </View>
 
           <Pressable
-            style={styles.signInButton}
+            style={[styles.signInButton, { 
+              borderColor: colors.border,
+              backgroundColor: colors.surface
+            }]}
             onPress={() => navigation.navigate('SignIn')}
             disabled={isLoading}
           >
-            <Text style={styles.signInButtonText}>Zaten hesabım var</Text>
+            <Text style={[styles.signInButtonText, { color: colors.text }]}>Zaten hesabım var</Text>
           </Pressable>
         </View>
       </ScrollView>

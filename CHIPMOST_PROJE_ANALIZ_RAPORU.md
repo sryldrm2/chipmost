@@ -652,3 +652,5 @@ Bu rapor, Chipmost projesinin mevcut durumunu ve teknik detaylarını kapsamlı 
 **Durum**: Güncel ve Tamamlanmış
 
 
+
+

@@ -13,10 +13,12 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
+import { useTheme } from '../../context/ThemeContext';
 
 export default function ForgotPasswordScreen() {
   const navigation = useNavigation<any>();
   const { forgotPassword } = useAuth();
+  const { colors } = useTheme();
   
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -75,7 +77,7 @@ export default function ForgotPasswordScreen() {
   };
 
   return (
-    <KeyboardAvoidingView style={styles.container} behavior="padding">
+    <KeyboardAvoidingView style={[styles.container, { backgroundColor: colors.background }]} behavior="padding">
       <ScrollView 
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
@@ -86,43 +88,48 @@ export default function ForgotPasswordScreen() {
             onPress={handleBackToSignIn}
             disabled={isLoading}
           >
-            <Ionicons name="arrow-back" size={24} color="#111" />
+            <Ionicons name="arrow-back" size={24} color={colors.text} />
           </Pressable>
           
-          <Text style={styles.title}>Şifremi Unuttum</Text>
-          <Text style={styles.subtitle}>
+          <Text style={[styles.title, { color: colors.text }]}>Şifremi Unuttum</Text>
+          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
             E-posta adresinizi girin, şifre sıfırlama bağlantısı gönderelim
           </Text>
         </View>
 
         {error ? (
-          <View style={styles.errorContainer}>
-            <Text style={styles.errorText}>{error}</Text>
+          <View style={[styles.errorContainer, { backgroundColor: colors.errorBackground }]}>
+            <Text style={[styles.errorText, { color: colors.error }]}>{error}</Text>
             <Pressable onPress={clearError} style={styles.errorClose}>
-              <Ionicons name="close" size={20} color="#fff" />
+              <Ionicons name="close" size={20} color={colors.buttonText} />
             </Pressable>
           </View>
         ) : null}
 
         {success ? (
-          <View style={styles.successContainer}>
-            <Ionicons name="checkmark-circle" size={24} color="#198754" />
-            <Text style={styles.successText}>
+          <View style={[styles.successContainer, { backgroundColor: colors.successBackground }]}>
+            <Ionicons name="checkmark-circle" size={24} color={colors.success} />
+            <Text style={[styles.successText, { color: colors.success }]}>
               Şifre sıfırlama bağlantısı e-posta adresinize gönderildi
             </Text>
             <Pressable onPress={clearSuccess} style={styles.successClose}>
-              <Ionicons name="close" size={20} color="#198754" />
+              <Ionicons name="close" size={20} color={colors.success} />
             </Pressable>
           </View>
         ) : null}
 
         <View style={styles.form}>
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>E-posta</Text>
+            <Text style={[styles.label, { color: colors.text }]}>E-posta</Text>
             <TextInput
               ref={emailRef}
-              style={styles.input}
+              style={[styles.input, { 
+                borderColor: colors.border, 
+                backgroundColor: colors.surface,
+                color: colors.text 
+              }]}
               placeholder="ornek@email.com"
+              placeholderTextColor={colors.textMuted}
               value={email}
               onChangeText={setEmail}
               keyboardType="email-address"
@@ -137,35 +144,39 @@ export default function ForgotPasswordScreen() {
           <Pressable
             style={[
               styles.submitButton,
+              { backgroundColor: colors.primary },
               (!email.trim() || isLoading) && styles.submitButtonDisabled
             ]}
             onPress={handleForgotPassword}
             disabled={!email.trim() || isLoading}
           >
             {isLoading ? (
-              <ActivityIndicator color="#fff" size="small" />
+              <ActivityIndicator color={colors.buttonText} size="small" />
             ) : (
-              <Text style={styles.submitButtonText}>Sıfırlama Bağlantısı Gönder</Text>
+              <Text style={[styles.submitButtonText, { color: colors.buttonText }]}>Sıfırlama Bağlantısı Gönder</Text>
             )}
           </Pressable>
 
           <View style={styles.divider}>
-            <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>veya</Text>
-            <View style={styles.dividerLine} />
+            <View style={[styles.dividerLine, { backgroundColor: colors.divider }]} />
+            <Text style={[styles.dividerText, { color: colors.textMuted }]}>veya</Text>
+            <View style={[styles.dividerLine, { backgroundColor: colors.divider }]} />
           </View>
 
           <Pressable
-            style={styles.backToSignInButton}
+            style={[styles.backToSignInButton, { 
+              borderColor: colors.border,
+              backgroundColor: colors.surface
+            }]}
             onPress={handleBackToSignIn}
             disabled={isLoading}
           >
-            <Text style={styles.backToSignInButtonText}>Giriş Ekranına Dön</Text>
+            <Text style={[styles.backToSignInButtonText, { color: colors.text }]}>Giriş Ekranına Dön</Text>
           </Pressable>
         </View>
 
         <View style={styles.footer}>
-          <Text style={styles.footerText}>
+          <Text style={[styles.footerText, { color: colors.textMuted }]}>
             E-posta gelmedi mi? Spam klasörünü kontrol edin
           </Text>
         </View>
