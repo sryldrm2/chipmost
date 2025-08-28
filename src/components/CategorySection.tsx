@@ -22,6 +22,13 @@ export default function CategorySection({ title, items, onPressItem }: Props) {
           </View>
         )}
         columnWrapperStyle={{ gap: 12 }}
+        scrollEnabled={false} // Disable scroll in FlatList since parent ScrollView handles it
+        showsVerticalScrollIndicator={false}
+        showsHorizontalScrollIndicator={false}
+        removeClippedSubviews={true}
+        maxToRenderPerBatch={10}
+        windowSize={10}
+        initialNumToRender={8}
       />
     </View>
   );

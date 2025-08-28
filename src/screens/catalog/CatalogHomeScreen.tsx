@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useMemo, useState } from 'react';
-import { BackHandler, Platform, StyleSheet, Text, View } from 'react-native';
+import { BackHandler, Platform, StyleSheet, Text, View, ScrollView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import CategorySection from '../../components/CategorySection';
 import { CATEGORIES } from '../../data/categories';
@@ -39,8 +39,20 @@ export default function CatalogHomeScreen() {
       <Text style={[styles.title, { color: colors.text }]}>Chipmost – Katalog</Text>
       <Text style={[styles.sub, { color: colors.textSecondary }]}>Kategori seçerek ürünlere ilerle</Text>
 
-      <CategorySection title="⭐️ Popüler Kategoriler" items={popular} onPressItem={goCategory} />
-      <CategorySection title="📚 Tüm Kategoriler" items={all} onPressItem={goCategory} />
+      <ScrollView 
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={true}
+        showsHorizontalScrollIndicator={false}
+        bounces={true}
+        alwaysBounceVertical={false}
+        scrollEventThrottle={16}
+        decelerationRate="normal"
+        contentInsetAdjustmentBehavior="automatic"
+      >
+        <CategorySection title="⭐️ Popüler Kategoriler" items={popular} onPressItem={goCategory} />
+        <CategorySection title="📚 Tüm Kategoriler" items={all} onPressItem={goCategory} />
+      </ScrollView>
 
       {Platform.OS === 'android' && showExitHint && (
         <View style={[styles.exitHint, { backgroundColor: colors.text }]}><Text style={[styles.exitHintText, { color: colors.background }]}>Çıkmak için tekrar basın</Text></View>
@@ -59,6 +71,8 @@ const styles = StyleSheet.create({
     borderRadius: 999, elevation: 3,
   },
   exitHintText: { color: '#fff', fontWeight: '600' },
+  scrollView: { flex: 1 },
+  scrollContent: { paddingBottom: 24 },
 });
 
 
