@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -6,7 +6,9 @@ import {
   StyleSheet,
   Alert,
   ScrollView,
-  ActivityIndicator
+  ActivityIndicator,
+  Platform,
+  Modal
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
@@ -17,6 +19,7 @@ export default function AccountHomeScreen() {
   const { state, signOut } = useAuth();
   const navigation = useNavigation<any>();
   const { colors } = useTheme();
+  const [showSignOutModal, setShowSignOutModal] = useState(false);
 
   const getAvatarColor = (avatarIndex: number) => {
     const avatarColors = [
@@ -31,34 +34,51 @@ export default function AccountHomeScreen() {
   };
 
   const handleSignOut = () => {
-    Alert.alert(
-      'Çıkış Yap',
-      'Hesabınızdan çıkmak istediğinizden emin misiniz?',
-      [
-        { text: 'İptal', style: 'cancel' },
-        {
-          text: 'Çıkış Yap',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await signOut();
-              // Çıkış sonrası SignIn ekranına yönlendir
-              // Bu navigation işlemi AuthContext'te yapılacak
-            } catch (error) {
-              console.error('Sign out error:', error);
-            }
+    console.log('handleSignOut called');
+    
+    if (Platform.OS === 'web') {
+      // Web için custom modal kullan
+      setShowSignOutModal(true);
+    } else {
+      // Native platformlar için Alert.alert kullan
+      Alert.alert(
+        'Çıkış Yap',
+        'Hesabınızdan çıkmak istediğinizden emin misiniz?',
+        [
+          { text: 'İptal', style: 'cancel' },
+          {
+            text: 'Çıkış Yap',
+            style: 'destructive',
+            onPress: performSignOut
           }
-        }
-      ]
-    );
+        ]
+      );
+    }
+  };
+
+  const performSignOut = async () => {
+    console.log('Çıkış Yap butonuna basıldı');
+    try {
+      console.log('signOut çağrılıyor...');
+      await signOut();
+      console.log('signOut tamamlandı');
+      // Çıkış sonrası SignIn ekranına yönlendir
+      // Bu navigation işlemi AuthContext'te yapılacak
+    } catch (error) {
+      console.error('Sign out error:', error);
+    }
   };
 
   const handleManageAccount = () => {
-    Alert.alert(
-      'Hesap Yönetimi',
-      'Bu özellik gelecek günlerde eklenecek.',
-      [{ text: 'Tamam', style: 'default' }]
-    );
+    if (Platform.OS === 'web') {
+      alert('Bu özellik gelecek günlerde eklenecek.');
+    } else {
+      Alert.alert(
+        'Hesap Yönetimi',
+        'Bu özellik gelecek günlerde eklenecek.',
+        [{ text: 'Tamam', style: 'default' }]
+      );
+    }
   };
 
   const handleOrderHistory = () => {
@@ -70,11 +90,15 @@ export default function AccountHomeScreen() {
   };
 
   const handlePaymentMethods = () => {
-    Alert.alert(
-      'Ödeme Yöntemleri',
-      'Bu özellik gelecek günlerde eklenecek.',
-      [{ text: 'Tamam', style: 'default' }]
-    );
+    if (Platform.OS === 'web') {
+      alert('Bu özellik gelecek günlerde eklenecek.');
+    } else {
+      Alert.alert(
+        'Ödeme Yöntemleri',
+        'Bu özellik gelecek günlerde eklenecek.',
+        [{ text: 'Tamam', style: 'default' }]
+      );
+    }
   };
 
   if (state.isLoading) {
@@ -99,120 +123,162 @@ export default function AccountHomeScreen() {
   }
 
   return (
-    <ScrollView style={[styles.container, { backgroundColor: colors.background }]} contentContainerStyle={styles.content}>
-      {/* Header */}
-      <View style={[styles.header, { backgroundColor: colors.card, borderColor: colors.border }]}>
-        <View style={[styles.avatarContainer, { backgroundColor: getAvatarColor(state.user.avatar || 0) }]}>
-          <Text style={[styles.avatarText, { color: colors.buttonText }]}>
-            {state.user.firstName.charAt(0)}{state.user.lastName.charAt(0)}
+    <>
+      <ScrollView style={[styles.container, { backgroundColor: colors.background }]} contentContainerStyle={styles.content}>
+        {/* Header */}
+        <View style={[styles.header, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <View style={[styles.avatarContainer, { backgroundColor: getAvatarColor(state.user.avatar || 0) }]}>
+            <Text style={[styles.avatarText, { color: colors.buttonText }]}>
+              {state.user.firstName.charAt(0)}{state.user.lastName.charAt(0)}
+            </Text>
+          </View>
+          <View style={styles.userInfo}>
+            <Text style={[styles.userName, { color: colors.text }]}>
+              {state.user.firstName} {state.user.lastName}
+            </Text>
+            <Text style={[styles.userEmail, { color: colors.textSecondary }]}>{state.user.email}</Text>
+            {state.user.phone && (
+              <Text style={[styles.userPhone, { color: colors.textSecondary }]}>{state.user.phone}</Text>
+            )}
+          </View>
+        </View>
+
+        {/* Welcome Section */}
+        <View style={[styles.welcomeSection, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <Text style={[styles.welcomeTitle, { color: colors.text }]}>Hoş geldiniz! 👋</Text>
+          <Text style={[styles.welcomeText, { color: colors.textSecondary }]}>
+            Chipmost hesabınızı yönetin ve siparişlerinizi takip edin.
           </Text>
         </View>
-        <View style={styles.userInfo}>
-          <Text style={[styles.userName, { color: colors.text }]}>
-            {state.user.firstName} {state.user.lastName}
+
+        {/* Quick Actions */}
+        <View style={[styles.section, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Hızlı İşlemler</Text>
+          <View style={styles.quickActions}>
+            <Pressable style={[styles.quickAction, { backgroundColor: colors.surface, borderColor: colors.border }]} onPress={handleOrderHistory}>
+              <View style={[styles.quickActionIcon, { backgroundColor: colors.primary }]}>
+                <Ionicons name="receipt" size={24} color={colors.buttonText} />
+              </View>
+              <Text style={[styles.quickActionText, { color: colors.text }]}>Sipariş Geçmişi</Text>
+            </Pressable>
+            
+            <Pressable style={[styles.quickAction, { backgroundColor: colors.surface, borderColor: colors.border }]} onPress={handleAddresses}>
+              <View style={[styles.quickActionIcon, { backgroundColor: colors.success }]}>
+                <Ionicons name="location" size={24} color={colors.buttonText} />
+              </View>
+              <Text style={[styles.quickActionText, { color: colors.text }]}>Adreslerim</Text>
+            </Pressable>
+            
+            <Pressable style={[styles.quickAction, { backgroundColor: colors.surface, borderColor: colors.border }]} onPress={handlePaymentMethods}>
+              <View style={[styles.quickActionIcon, { backgroundColor: colors.warning }]}>
+                <Ionicons name="card" size={24} color={colors.buttonText} />
+              </View>
+              <Text style={[styles.quickActionText, { color: colors.text }]}>Ödeme Yöntemleri</Text>
+            </Pressable>
+          </View>
+        </View>
+
+        {/* Account Settings */}
+        <View style={[styles.section, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Hesap Ayarları</Text>
+          
+          <Pressable style={[styles.menuItem, { backgroundColor: colors.surface, borderColor: colors.border }]} onPress={() => navigation.navigate('ProfileEdit')}>
+            <View style={styles.menuItemLeft}>
+              <Ionicons name="person" size={20} color={colors.textSecondary} />
+              <Text style={[styles.menuItemText, { color: colors.text }]}>Profil Bilgileri</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
+          </Pressable>
+          
+          <Pressable style={[styles.menuItem, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <View style={styles.menuItemLeft}>
+              <Ionicons name="notifications" size={20} color={colors.textSecondary} />
+              <Text style={[styles.menuItemText, { color: colors.text }]}>Bildirim Ayarları</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
+          </Pressable>
+          
+          <Pressable style={[styles.menuItem, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <View style={styles.menuItemLeft}>
+              <Ionicons name="shield-checkmark" size={20} color={colors.textSecondary} />
+              <Text style={[styles.menuItemText, { color: colors.text }]}>Güvenlik</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
+          </Pressable>
+          
+          <Pressable style={[styles.menuItem, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <View style={styles.menuItemLeft}>
+              <Ionicons name="help-circle" size={20} color={colors.textSecondary} />
+              <Text style={[styles.menuItemText, { color: colors.text }]}>Yardım & Destek</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
+          </Pressable>
+          
+          <Pressable style={[styles.menuItem, { backgroundColor: colors.surface, borderColor: colors.border }]} onPress={() => navigation.navigate('ThemeSettings')}>
+            <View style={styles.menuItemLeft}>
+              <Ionicons name="color-palette" size={20} color={colors.textSecondary} />
+              <Text style={[styles.menuItemText, { color: colors.text }]}>Tema Ayarları</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
+          </Pressable>
+        </View>
+
+        {/* Sign Out Button */}
+        <View style={styles.signOutSection}>
+          <Pressable style={[styles.signOutButton, { backgroundColor: colors.error }]} onPress={handleSignOut}>
+            <Ionicons name="log-out-outline" size={20} color={colors.buttonText} />
+            <Text style={[styles.signOutButtonText, { color: colors.buttonText }]}>Çıkış Yap</Text>
+          </Pressable>
+        </View>
+
+        {/* Footer */}
+        <View style={styles.footer}>
+          <Text style={[styles.footerText, { color: colors.textMuted }]}>
+            Chipmost v1.0.0 • Hesap ID: {state.user.id}
           </Text>
-          <Text style={[styles.userEmail, { color: colors.textSecondary }]}>{state.user.email}</Text>
-          {state.user.phone && (
-            <Text style={[styles.userPhone, { color: colors.textSecondary }]}>{state.user.phone}</Text>
-          )}
         </View>
-      </View>
+      </ScrollView>
 
-      {/* Welcome Section */}
-      <View style={[styles.welcomeSection, { backgroundColor: colors.card, borderColor: colors.border }]}>
-        <Text style={[styles.welcomeTitle, { color: colors.text }]}>Hoş geldiniz! 👋</Text>
-        <Text style={[styles.welcomeText, { color: colors.textSecondary }]}>
-          Chipmost hesabınızı yönetin ve siparişlerinizi takip edin.
-        </Text>
-      </View>
-
-      {/* Quick Actions */}
-      <View style={[styles.section, { backgroundColor: colors.card, borderColor: colors.border }]}>
-        <Text style={[styles.sectionTitle, { color: colors.text }]}>Hızlı İşlemler</Text>
-        <View style={styles.quickActions}>
-          <Pressable style={[styles.quickAction, { backgroundColor: colors.surface, borderColor: colors.border }]} onPress={handleOrderHistory}>
-            <View style={[styles.quickActionIcon, { backgroundColor: colors.primary }]}>
-              <Ionicons name="receipt" size={24} color={colors.buttonText} />
+      {/* Custom Sign Out Modal for Web */}
+      <Modal
+        visible={showSignOutModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowSignOutModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, { backgroundColor: colors.card, borderColor: colors.border }]}>
+            <View style={styles.modalHeader}>
+              <Ionicons name="log-out-outline" size={24} color={colors.error} />
+              <Text style={[styles.modalTitle, { color: colors.text }]}>Çıkış Yap</Text>
             </View>
-            <Text style={[styles.quickActionText, { color: colors.text }]}>Sipariş Geçmişi</Text>
-          </Pressable>
-          
-          <Pressable style={[styles.quickAction, { backgroundColor: colors.surface, borderColor: colors.border }]} onPress={handleAddresses}>
-            <View style={[styles.quickActionIcon, { backgroundColor: colors.success }]}>
-              <Ionicons name="location" size={24} color={colors.buttonText} />
+            
+            <Text style={[styles.modalMessage, { color: colors.textSecondary }]}>
+              Hesabınızdan çıkmak istediğinizden emin misiniz?
+            </Text>
+            
+            <View style={styles.modalButtons}>
+              <Pressable
+                style={[styles.modalButton, styles.modalButtonCancel, { borderColor: colors.border }]}
+                onPress={() => setShowSignOutModal(false)}
+              >
+                <Text style={[styles.modalButtonText, { color: colors.text }]}>İptal</Text>
+              </Pressable>
+              
+              <Pressable
+                style={[styles.modalButton, styles.modalButtonConfirm, { backgroundColor: colors.error }]}
+                onPress={() => {
+                  setShowSignOutModal(false);
+                  performSignOut();
+                }}
+              >
+                <Text style={[styles.modalButtonText, { color: colors.buttonText }]}>Çıkış Yap</Text>
+              </Pressable>
             </View>
-            <Text style={[styles.quickActionText, { color: colors.text }]}>Adreslerim</Text>
-          </Pressable>
-          
-          <Pressable style={[styles.quickAction, { backgroundColor: colors.surface, borderColor: colors.border }]} onPress={handlePaymentMethods}>
-            <View style={[styles.quickActionIcon, { backgroundColor: colors.warning }]}>
-              <Ionicons name="card" size={24} color={colors.buttonText} />
-            </View>
-            <Text style={[styles.quickActionText, { color: colors.text }]}>Ödeme Yöntemleri</Text>
-          </Pressable>
+          </View>
         </View>
-      </View>
-
-      {/* Account Settings */}
-      <View style={[styles.section, { backgroundColor: colors.card, borderColor: colors.border }]}>
-        <Text style={[styles.sectionTitle, { color: colors.text }]}>Hesap Ayarları</Text>
-        
-        <Pressable style={[styles.menuItem, { backgroundColor: colors.surface, borderColor: colors.border }]} onPress={() => navigation.navigate('ProfileEdit')}>
-          <View style={styles.menuItemLeft}>
-            <Ionicons name="person" size={20} color={colors.textSecondary} />
-            <Text style={[styles.menuItemText, { color: colors.text }]}>Profil Bilgileri</Text>
-          </View>
-          <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
-        </Pressable>
-        
-        <Pressable style={[styles.menuItem, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-          <View style={styles.menuItemLeft}>
-            <Ionicons name="notifications" size={20} color={colors.textSecondary} />
-            <Text style={[styles.menuItemText, { color: colors.text }]}>Bildirim Ayarları</Text>
-          </View>
-          <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
-        </Pressable>
-        
-        <Pressable style={[styles.menuItem, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-          <View style={styles.menuItemLeft}>
-            <Ionicons name="shield-checkmark" size={20} color={colors.textSecondary} />
-            <Text style={[styles.menuItemText, { color: colors.text }]}>Güvenlik</Text>
-          </View>
-          <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
-        </Pressable>
-        
-        <Pressable style={[styles.menuItem, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-          <View style={styles.menuItemLeft}>
-            <Ionicons name="help-circle" size={20} color={colors.textSecondary} />
-            <Text style={[styles.menuItemText, { color: colors.text }]}>Yardım & Destek</Text>
-          </View>
-          <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
-        </Pressable>
-        
-        <Pressable style={[styles.menuItem, { backgroundColor: colors.surface, borderColor: colors.border }]} onPress={() => navigation.navigate('ThemeSettings')}>
-          <View style={styles.menuItemLeft}>
-            <Ionicons name="color-palette" size={20} color={colors.textSecondary} />
-            <Text style={[styles.menuItemText, { color: colors.text }]}>Tema Ayarları</Text>
-          </View>
-          <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
-        </Pressable>
-      </View>
-
-      {/* Sign Out Button */}
-      <View style={styles.signOutSection}>
-        <Pressable style={[styles.signOutButton, { backgroundColor: colors.error }]} onPress={handleSignOut}>
-          <Ionicons name="log-out-outline" size={20} color={colors.buttonText} />
-          <Text style={[styles.signOutButtonText, { color: colors.buttonText }]}>Çıkış Yap</Text>
-        </Pressable>
-      </View>
-
-      {/* Footer */}
-      <View style={styles.footer}>
-        <Text style={[styles.footerText, { color: colors.textMuted }]}>
-          Chipmost v1.0.0 • Hesap ID: {state.user.id}
-        </Text>
-      </View>
-    </ScrollView>
+      </Modal>
+    </>
   );
 }
 
@@ -404,5 +470,62 @@ const styles = StyleSheet.create({
   footerText: {
     fontSize: 12,
     textAlign: 'center',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    width: '90%',
+    maxWidth: 400,
+    borderRadius: 16,
+    padding: 24,
+    borderWidth: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 12,
+    elevation: 5,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+    gap: 12,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+  },
+  modalMessage: {
+    fontSize: 16,
+    lineHeight: 24,
+    marginBottom: 24,
+    textAlign: 'center',
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  modalButton: {
+    flex: 1,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalButtonCancel: {
+    borderWidth: 1,
+    backgroundColor: 'transparent',
+  },
+  modalButtonConfirm: {
+    borderWidth: 0,
+  },
+  modalButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
   },
 });

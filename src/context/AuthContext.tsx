@@ -141,14 +141,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signOut = async () => {
+    console.log('AuthContext: signOut called');
     try {
+      console.log('AuthContext: Clearing stored auth...');
       await clearStoredAuth();
+      console.log('AuthContext: Stored auth cleared');
+      
+      console.log('AuthContext: Updating state...');
       setState({
         user: null,
         token: null,
         isLoading: false,
         isAuthenticated: false
       });
+      console.log('AuthContext: State updated successfully');
     } catch (error) {
       console.error('Sign out error:', error);
     }
