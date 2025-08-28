@@ -12,6 +12,7 @@ import { useNavigation } from '@react-navigation/native';
 import type { StackNavigationProp } from '@react-navigation/stack';
 import type { SearchStackParamList } from '../../../navigation/SearchStack';
 import { useSearchFilters } from '../SearchFilterContext';
+import { useTheme } from '../../../context/ThemeContext';
 import SearchResultCard from '../../../screens/search/SearchResultCard';
 import type { Product } from '../../../types/product';
 
@@ -24,6 +25,7 @@ interface SearchResultsListProps {
 
 export default function SearchResultsList({ onLoadMore, onRefresh }: SearchResultsListProps) {
   const navigation = useNavigation<SearchNavigationProp>();
+  const { colors } = useTheme();
   const { state } = useSearchFilters();
   const { results, isLoading, error, hasMore } = state;
 
@@ -51,7 +53,7 @@ export default function SearchResultsList({ onLoadMore, onRefresh }: SearchResul
     if (!hasMore) {
       return (
         <View style={styles.footer}>
-          <Text style={styles.footerText}>
+          <Text style={[styles.footerText, { color: colors.textSecondary }]}>
             {results?.items.length ? 'Tüm sonuçlar gösterildi' : 'Sonuç bulunamadı'}
           </Text>
         </View>
@@ -61,21 +63,21 @@ export default function SearchResultsList({ onLoadMore, onRefresh }: SearchResul
     if (isLoading) {
       return (
         <View style={styles.footer}>
-          <ActivityIndicator size="small" color="#007AFF" />
-          <Text style={styles.footerText}>Yükleniyor...</Text>
+          <ActivityIndicator size="small" color={colors.primary} />
+          <Text style={[styles.footerText, { color: colors.textSecondary }]}>Yükleniyor...</Text>
         </View>
       );
     }
 
     return null;
-  }, [hasMore, isLoading, results?.items.length]);
+  }, [hasMore, isLoading, results?.items.length, colors]);
 
   const renderEmptyState = useCallback(() => {
     if (isLoading) {
       return (
         <View style={styles.emptyState}>
-          <ActivityIndicator size="large" color="#007AFF" />
-          <Text style={styles.emptyStateText}>Aranıyor...</Text>
+          <ActivityIndicator size="large" color={colors.primary} />
+          <Text style={[styles.emptyStateText, { color: colors.textSecondary }]}>Aranıyor...</Text>
         </View>
       );
     }
@@ -84,10 +86,10 @@ export default function SearchResultsList({ onLoadMore, onRefresh }: SearchResul
       return (
         <View style={styles.emptyState}>
           <Text style={styles.errorIcon}>⚠️</Text>
-          <Text style={styles.errorTitle}>Bir hata oluştu</Text>
-          <Text style={styles.errorText}>{error}</Text>
-          <TouchableOpacity style={styles.retryButton} onPress={onRefresh}>
-            <Text style={styles.retryButtonText}>Tekrar Dene</Text>
+          <Text style={[styles.errorTitle, { color: colors.error }]}>Bir hata oluştu</Text>
+          <Text style={[styles.errorText, { color: colors.textSecondary }]}>{error}</Text>
+          <TouchableOpacity style={[styles.retryButton, { backgroundColor: colors.primary }]} onPress={onRefresh}>
+            <Text style={[styles.retryButtonText, { color: colors.buttonText }]}>Tekrar Dene</Text>
           </TouchableOpacity>
         </View>
       );
@@ -97,8 +99,8 @@ export default function SearchResultsList({ onLoadMore, onRefresh }: SearchResul
       return (
         <View style={styles.emptyState}>
           <Text style={styles.emptyIcon}>🔍</Text>
-          <Text style={styles.emptyTitle}>Sonuç bulunamadı</Text>
-          <Text style={styles.emptyText}>
+          <Text style={[styles.emptyTitle, { color: colors.text }]}>Sonuç bulunamadı</Text>
+          <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
             Arama kriterlerinize uygun ürün bulunamadı. Farklı anahtar kelimeler deneyin veya filtreleri değiştirin.
           </Text>
         </View>
@@ -106,7 +108,7 @@ export default function SearchResultsList({ onLoadMore, onRefresh }: SearchResul
     }
 
     return null;
-  }, [isLoading, error, results?.items.length, onRefresh]);
+  }, [isLoading, error, results?.items.length, onRefresh, colors]);
 
   const handleEndReached = useCallback(() => {
     if (hasMore && !isLoading) {
@@ -124,8 +126,8 @@ export default function SearchResultsList({ onLoadMore, onRefresh }: SearchResul
     return (
       <View style={styles.emptyState}>
         <Text style={styles.emptyIcon}>🔍</Text>
-        <Text style={styles.emptyTitle}>Arama yapın</Text>
-        <Text style={styles.emptyText}>
+        <Text style={[styles.emptyTitle, { color: colors.text }]}>Arama yapın</Text>
+        <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
           Ürün bulmak için yukarıdaki arama kutusunu kullanın veya filtreleri seçin.
         </Text>
       </View>
@@ -153,8 +155,8 @@ export default function SearchResultsList({ onLoadMore, onRefresh }: SearchResul
         <RefreshControl
           refreshing={isLoading && results?.items.length === 0}
           onRefresh={onRefresh}
-          colors={['#007AFF']}
-          tintColor="#007AFF"
+          colors={[colors.primary]}
+          tintColor={colors.primary}
         />
       }
     />
@@ -174,7 +176,6 @@ const styles = StyleSheet.create({
   },
   footerText: {
     fontSize: 14,
-    color: '#666',
     textAlign: 'center',
   },
   emptyState: {
@@ -191,19 +192,16 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 20,
     fontWeight: '600',
-    color: '#333',
     marginBottom: 8,
     textAlign: 'center',
   },
   emptyText: {
     fontSize: 16,
-    color: '#666',
     textAlign: 'center',
     lineHeight: 24,
   },
   emptyStateText: {
     fontSize: 16,
-    color: '#666',
     textAlign: 'center',
     marginTop: 16,
   },
@@ -214,25 +212,21 @@ const styles = StyleSheet.create({
   errorTitle: {
     fontSize: 20,
     fontWeight: '600',
-    color: '#d32f2f',
     marginBottom: 8,
     textAlign: 'center',
   },
   errorText: {
     fontSize: 16,
-    color: '#666',
     textAlign: 'center',
     lineHeight: 24,
     marginBottom: 20,
   },
   retryButton: {
-    backgroundColor: '#007AFF',
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 8,
   },
   retryButtonText: {
-    color: '#fff',
     fontSize: 16,
     fontWeight: '600',
   },

@@ -15,6 +15,7 @@ import { useSearchFilters } from '../../features/search/SearchFilterContext';
 import { useDebounce } from '../../shared/hooks/useDebounce';
 import { searchProducts } from '../../services/searchApi';
 import { useWebUrlSync } from '../../features/search/hooks/useWebUrlSync';
+import { useTheme } from '../../context/ThemeContext';
 import FilterChips from '../../features/search/components/FilterChips';
 import FilterSheet from '../../features/search/components/FilterSheet';
 import SearchResultsList from '../../features/search/components/SearchResultsList';
@@ -23,6 +24,7 @@ type SearchNavigationProp = StackNavigationProp<SearchStackParamList, 'SearchScr
 
 export default function SearchScreen() {
   const navigation = useNavigation<SearchNavigationProp>();
+  const { colors } = useTheme();
   const { state, setFilters, loadMore, setError } = useSearchFilters();
   const { filters, isLoading } = state;
   
@@ -98,41 +100,45 @@ export default function SearchScreen() {
     setFilters({ page: 1 });
   };
 
-  const handleQueryChange = (text: string) => {
-    setFilters({ q: text, page: 1 });
-  };
-
   return (
-    <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Arama</Text>
-        <Text style={styles.headerSubtitle}>Ürün ve kategorilerde arama yapın</Text>
+    <View style={[styles.container, { backgroundColor: colors.backgroundSecondary }]}>
+      {/* Header Section */}
+      <View style={[styles.header, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>
+          🔍 Ürün Arama
+        </Text>
+        <Text style={[styles.headerSubtitle, { color: colors.textSecondary }]}>
+          MPN, ürün adı veya açıklama ile arama yapın
+        </Text>
       </View>
 
-      {/* Search Input */}
-      <View style={styles.searchSection}>
+      {/* Search Section */}
+      <View style={[styles.searchSection, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
         <View style={styles.searchInputContainer}>
           <TextInput
-            style={styles.searchInput}
-            placeholder="Ürün adı, kategori veya açıklama..."
+            style={[styles.searchInput, { 
+              backgroundColor: colors.surface,
+              borderColor: colors.border,
+              color: colors.text,
+            }]}
+            placeholder="MPN, ürün adı veya açıklama..."
+            placeholderTextColor={colors.textMuted}
             value={filters.q}
-            onChangeText={handleQueryChange}
-            onSubmitEditing={handleSearch}
+            onChangeText={(text) => setFilters({ q: text, page: 1 })}
+            autoCapitalize="none"
+            autoCorrect={false}
             returnKeyType="search"
+            onSubmitEditing={handleSearch}
             accessibilityLabel="Arama terimi girin"
-            accessibilityHint="Ürün adı, kategori veya açıklama ile arama yapın"
           />
-          <TouchableOpacity 
-            style={styles.searchButton}
+          <TouchableOpacity
+            style={[styles.searchButton, { backgroundColor: colors.primary }]}
             onPress={handleSearch}
-            disabled={isLoading}
-            accessibilityRole="button"
+            disabled={!filters.q.trim()}
             accessibilityLabel="Arama yap"
-            accessibilityState={{ disabled: isLoading }}
           >
-            <Text style={styles.searchButtonText}>
-              {isLoading ? 'Aranıyor...' : 'Ara'}
+            <Text style={[styles.searchButtonText, { color: colors.buttonText }]}>
+              {isLoading ? '🔍' : 'Ara'}
             </Text>
           </TouchableOpacity>
         </View>
@@ -141,21 +147,20 @@ export default function SearchScreen() {
       {/* Filter Chips */}
       <FilterChips />
 
-      {/* Advanced Filters Button */}
-      <View style={styles.advancedFiltersSection}>
-          <TouchableOpacity 
-          style={styles.advancedFiltersButton}
+      {/* Advanced Filters Section */}
+      <View style={[styles.advancedFiltersSection, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
+        <TouchableOpacity
+          style={[styles.advancedFiltersButton, { backgroundColor: colors.primary }]}
           onPress={() => setShowFilterSheet(true)}
-          accessibilityRole="button"
           accessibilityLabel="Gelişmiş filtreleri aç"
         >
-          <Text style={styles.advancedFiltersButtonText}>🔧 Gelişmiş Filtreler</Text>
+          <Text style={[styles.advancedFiltersButtonText, { color: colors.buttonText }]}>🔧 Gelişmiş Filtreler</Text>
           </TouchableOpacity>
       </View>
 
       {/* Results Section */}
       <View style={styles.resultsSection}>
-        <Text style={styles.sectionTitle}>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>
           Arama Sonuçları {state.results ? `(${state.results.total})` : ''}
         </Text>
         
@@ -177,28 +182,23 @@ export default function SearchScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
   },
   header: {
     padding: 20,
-    backgroundColor: '#fff',
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
   },
   headerTitle: {
     fontSize: 28,
     fontWeight: '700',
-    color: '#333',
     marginBottom: 4,
   },
   headerSubtitle: {
     fontSize: 16,
-    color: '#666',
   },
   
   searchSection: {
     padding: 20,
-    backgroundColor: '#fff',
+    borderBottomWidth: 1,
   },
   searchInputContainer: {
     flexDirection: 'row',
@@ -207,15 +207,12 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     borderWidth: 1,
-    borderColor: '#e0e0e0',
     borderRadius: 8,
     paddingHorizontal: 16,
     paddingVertical: 12,
     fontSize: 16,
-    backgroundColor: '#fff',
   },
   searchButton: {
-    backgroundColor: '#007AFF',
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 8,
@@ -224,7 +221,6 @@ const styles = StyleSheet.create({
     minWidth: 80,
   },
   searchButtonText: {
-    color: '#fff',
     fontSize: 16,
     fontWeight: '600',
   },
@@ -232,19 +228,15 @@ const styles = StyleSheet.create({
   advancedFiltersSection: {
     paddingHorizontal: 20,
     paddingVertical: 12,
-    backgroundColor: '#fff',
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
   },
   advancedFiltersButton: {
-    backgroundColor: '#007AFF',
     paddingVertical: 12,
     paddingHorizontal: 24,
     borderRadius: 8,
     alignItems: 'center',
   },
   advancedFiltersButtonText: {
-    color: '#fff',
     fontSize: 16,
     fontWeight: '600',
   },
@@ -256,7 +248,6 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#333',
     marginBottom: 16,
   },
 });

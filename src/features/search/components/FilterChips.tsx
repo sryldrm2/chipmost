@@ -2,14 +2,17 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import { useSearchFilters } from '../SearchFilterContext';
 import { PRICE_RANGES, STOCK_OPTIONS } from '../constants';
+import { useTheme } from '../../../context/ThemeContext';
 import type { SearchFilters } from '../types';
 
 export default function FilterChips() {
+  const { colors } = useTheme();
   const { state, setFilters, resetFilters } = useSearchFilters();
   const { filters } = state;
 
   const hasActiveFilters = 
     filters.q || 
+    filters.price || 
     filters.price || 
     filters.inStock !== null || 
     filters.categories.length > 0;
@@ -56,15 +59,18 @@ export default function FilterChips() {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
       {/* Active Filters Summary */}
       {hasActiveFilters && (
         <View style={styles.summaryContainer}>
-          <Text style={styles.summaryTitle}>Aktif Filtreler:</Text>
+          <Text style={[styles.summaryTitle, { color: colors.textSecondary }]}>Aktif Filtreler:</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
             {getActiveFiltersSummary().map((filter, index) => (
-              <View key={index} style={styles.summaryPill}>
-                <Text style={styles.summaryPillText}>{filter}</Text>
+              <View key={index} style={[styles.summaryPill, { 
+                backgroundColor: colors.primaryLight, 
+                borderColor: colors.primary 
+              }]}>
+                <Text style={[styles.summaryPillText, { color: colors.primary }]}>{filter}</Text>
               </View>
             ))}
           </ScrollView>
@@ -79,22 +85,30 @@ export default function FilterChips() {
             key={range.label}
             style={[
               styles.chip,
+              { 
+                backgroundColor: colors.surface,
+                borderColor: colors.border,
+              },
               filters.price && 
               filters.price[0] === range.value[0] && 
               filters.price[1] === range.value[1] && 
-              styles.chipActive
+              [styles.chipActive, { 
+                backgroundColor: colors.primary,
+                borderColor: colors.primary 
+              }]
             ]}
-            onPress={() => handlePriceRangeSelect(range.value)}
+            onPress={() => handlePriceRangeSelect(range.value as [number, number])}
             accessibilityRole="button"
             accessibilityLabel={`Fiyat aralığı: ${range.label}`}
-            accessibilityState={{ selected: filters.price && filters.price[0] === range.value[0] && filters.price[1] === range.value[1] }}
+            accessibilityState={{ selected: !!(filters.price && filters.price[0] === range.value[0] && filters.price[1] === range.value[1]) }}
           >
             <Text style={[
               styles.chipText,
+              { color: colors.textSecondary },
               filters.price && 
               filters.price[0] === range.value[0] && 
               filters.price[1] === range.value[1] && 
-              styles.chipTextActive
+              [styles.chipTextActive, { color: colors.buttonText }]
             ]}>
               {range.label}
             </Text>
@@ -107,16 +121,24 @@ export default function FilterChips() {
             key={option.key === null ? 'all' : String(option.key)}
             style={[
               styles.chip,
-              filters.inStock === option.key && styles.chipActive
+              { 
+                backgroundColor: colors.surface,
+                borderColor: colors.border,
+              },
+              filters.inStock === option.key && [styles.chipActive, { 
+                backgroundColor: colors.primary,
+                borderColor: colors.primary 
+              }]
             ]}
             onPress={() => handleStockSelect(option.key)}
             accessibilityRole="button"
             accessibilityLabel={`Stok durumu: ${option.label}`}
-            accessibilityState={{ selected: filters.inStock === option.key }}
+            accessibilityState={{ selected: filters.inStock === option.key || false }}
           >
             <Text style={[
               styles.chipText,
-              filters.inStock === option.key && styles.chipTextActive
+              { color: colors.textSecondary },
+              filters.inStock === option.key && [styles.chipTextActive, { color: colors.buttonText }]
             ]}>
               {option.label}
             </Text>
@@ -129,7 +151,14 @@ export default function FilterChips() {
             key={category}
             style={[
               styles.chip,
-              filters.categories.includes(category) && styles.chipActive
+              { 
+                backgroundColor: colors.surface,
+                borderColor: colors.border,
+              },
+              filters.categories.includes(category) && [styles.chipActive, { 
+                backgroundColor: colors.primary,
+                borderColor: colors.primary 
+              }]
             ]}
             onPress={() => handleCategoryToggle(category)}
             accessibilityRole="button"
@@ -138,7 +167,8 @@ export default function FilterChips() {
           >
             <Text style={[
               styles.chipText,
-              filters.categories.includes(category) && styles.chipTextActive
+              { color: colors.textSecondary },
+              filters.categories.includes(category) && [styles.chipTextActive, { color: colors.buttonText }]
             ]}>
               {category}
             </Text>
@@ -149,12 +179,12 @@ export default function FilterChips() {
       {/* Clear All Button */}
       {hasActiveFilters && (
         <TouchableOpacity
-          style={styles.clearButton}
+          style={[styles.clearButton, { backgroundColor: colors.error }]}
           onPress={resetFilters}
           accessibilityRole="button"
           accessibilityLabel="Tüm filtreleri temizle"
         >
-          <Text style={styles.clearButtonText}>Temizle</Text>
+          <Text style={[styles.clearButtonText, { color: colors.buttonText }]}>Temizle</Text>
         </TouchableOpacity>
       )}
     </View>
@@ -163,10 +193,8 @@ export default function FilterChips() {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#fff',
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
   },
   summaryContainer: {
     paddingHorizontal: 20,
@@ -175,46 +203,38 @@ const styles = StyleSheet.create({
   summaryTitle: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#666',
     marginBottom: 8,
   },
   summaryPill: {
-    backgroundColor: '#e3f2fd',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 16,
     marginRight: 8,
     borderWidth: 1,
-    borderColor: '#2196f3',
   },
   summaryPillText: {
     fontSize: 12,
-    color: '#1976d2',
     fontWeight: '500',
   },
   chipsContainer: {
     paddingHorizontal: 20,
   },
   chip: {
-    backgroundColor: '#f5f5f5',
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
     marginRight: 12,
     borderWidth: 1,
-    borderColor: '#e0e0e0',
   },
   chipActive: {
-    backgroundColor: '#007AFF',
-    borderColor: '#007AFF',
+    // Tema renkleri ile override edilecek
   },
   chipText: {
     fontSize: 14,
-    color: '#666',
     fontWeight: '500',
   },
   chipTextActive: {
-    color: '#fff',
+    // Tema renkleri ile override edilecek
   },
   clearButton: {
     alignSelf: 'center',
@@ -222,10 +242,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 8,
     borderRadius: 16,
-    backgroundColor: '#f44336',
   },
   clearButtonText: {
-    color: '#fff',
     fontSize: 14,
     fontWeight: '600',
   },

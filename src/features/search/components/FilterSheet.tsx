@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { useSearchFilters } from '../SearchFilterContext';
 import { SORT_OPTIONS, STOCK_OPTIONS } from '../constants';
+import { useTheme } from '../../../context/ThemeContext';
 import type { SearchFilters } from '../types';
 
 interface FilterSheetProps {
@@ -20,6 +21,7 @@ interface FilterSheetProps {
 }
 
 export default function FilterSheet({ visible, onClose }: FilterSheetProps) {
+  const { colors } = useTheme();
   const { state, setFilters } = useSearchFilters();
   const { filters } = state;
   
@@ -102,42 +104,52 @@ export default function FilterSheet({ visible, onClose }: FilterSheetProps) {
       presentationStyle="pageSheet"
       onRequestClose={onClose}
     >
-      <View style={styles.container}>
+      <View style={[styles.container, { backgroundColor: colors.backgroundSecondary }]}>
         {/* Header */}
-        <View style={styles.header}>
+        <View style={[styles.header, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
           <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-            <Text style={styles.closeButtonText}>İptal</Text>
+            <Text style={[styles.closeButtonText, { color: colors.primary }]}>İptal</Text>
           </TouchableOpacity>
-          <Text style={styles.title}>Gelişmiş Filtreler</Text>
+          <Text style={[styles.title, { color: colors.text }]}>Gelişmiş Filtreler</Text>
           <TouchableOpacity onPress={handleReset} style={styles.resetButton}>
-            <Text style={styles.resetButtonText}>Sıfırla</Text>
+            <Text style={[styles.resetButtonText, { color: colors.error }]}>Sıfırla</Text>
           </TouchableOpacity>
         </View>
 
         <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
           {/* Price Range */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Fiyat Aralığı</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Fiyat Aralığı</Text>
             <View style={styles.priceInputs}>
               <View style={styles.priceInput}>
-                <Text style={styles.priceLabel}>Min (₺)</Text>
+                <Text style={[styles.priceLabel, { color: colors.textSecondary }]}>Min (₺)</Text>
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, { 
+                    backgroundColor: colors.surface,
+                    borderColor: colors.border,
+                    color: colors.text,
+                  }]}
                   value={customPriceRange[0].toString()}
                   onChangeText={(value) => handlePriceChange('min', value)}
                   keyboardType="numeric"
                   placeholder="0"
+                  placeholderTextColor={colors.textMuted}
                   accessibilityLabel="Minimum fiyat"
                 />
               </View>
               <View style={styles.priceInput}>
-                <Text style={styles.priceLabel}>Max (₺)</Text>
+                <Text style={[styles.priceLabel, { color: colors.textSecondary }]}>Max (₺)</Text>
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, { 
+                    backgroundColor: colors.surface,
+                    borderColor: colors.border,
+                    color: colors.text,
+                  }]}
                   value={customPriceRange[1].toString()}
                   onChangeText={(value) => handlePriceChange('max', value)}
                   keyboardType="numeric"
                   placeholder="1000"
+                  placeholderTextColor={colors.textMuted}
                   accessibilityLabel="Maksimum fiyat"
                 />
               </View>
@@ -146,27 +158,35 @@ export default function FilterSheet({ visible, onClose }: FilterSheetProps) {
 
           {/* Stock Status */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Stok Durumu</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Stok Durumu</Text>
             {STOCK_OPTIONS.map((option) => (
               <TouchableOpacity
                 key={option.key === null ? 'all' : String(option.key)}
                 style={[
                   styles.option,
-                  localFilters.inStock === option.key && styles.optionSelected
+                  { 
+                    backgroundColor: colors.surface,
+                    borderColor: colors.border,
+                  },
+                  localFilters.inStock === option.key && [styles.optionSelected, { 
+                    backgroundColor: colors.primaryLight,
+                    borderColor: colors.primary 
+                  }]
                 ]}
                 onPress={() => handleStockToggle(option.key)}
                 accessibilityRole="button"
                 accessibilityLabel={`Stok durumu: ${option.label}`}
-                accessibilityState={{ selected: localFilters.inStock === option.key }}
+                accessibilityState={{ selected: localFilters.inStock === option.key || false }}
               >
                 <Text style={[
                   styles.optionText,
-                  localFilters.inStock === option.key && styles.optionTextSelected
+                  { color: colors.text },
+                  localFilters.inStock === option.key && [styles.optionTextSelected, { color: colors.primary }]
                 ]}>
                   {option.label}
                 </Text>
                 {localFilters.inStock === option.key && (
-                  <Text style={styles.checkmark}>✓</Text>
+                  <Text style={[styles.checkmark, { color: colors.primary }]}>✓</Text>
                 )}
               </TouchableOpacity>
             ))}
@@ -174,27 +194,35 @@ export default function FilterSheet({ visible, onClose }: FilterSheetProps) {
 
           {/* Categories */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Kategoriler</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Kategoriler</Text>
             {['Konnektörler', 'Kablolar', 'Aksesuarlar', 'Araçlar', 'Mikrodenetleyiciler', 'Geliştirme Kartları'].map((category) => (
               <TouchableOpacity
                 key={category}
                 style={[
                   styles.option,
-                  localFilters.categories?.includes(category) && styles.optionSelected
+                  { 
+                    backgroundColor: colors.surface,
+                    borderColor: colors.border,
+                  },
+                  localFilters.categories?.includes(category) && [styles.optionSelected, { 
+                    backgroundColor: colors.primaryLight,
+                    borderColor: colors.primary 
+                  }]
                 ]}
                 onPress={() => handleCategoryToggle(category)}
                 accessibilityRole="button"
                 accessibilityLabel={`Kategori: ${category}`}
-                accessibilityState={{ selected: localFilters.categories?.includes(category) }}
+                accessibilityState={{ selected: localFilters.categories?.includes(category) || false }}
               >
                 <Text style={[
                   styles.optionText,
-                  localFilters.categories?.includes(category) && styles.optionTextSelected
+                  { color: colors.text },
+                  localFilters.categories?.includes(category) && [styles.optionTextSelected, { color: colors.primary }]
                 ]}>
                   {category}
                 </Text>
                 {localFilters.categories?.includes(category) && (
-                  <Text style={styles.checkmark}>✓</Text>
+                  <Text style={[styles.checkmark, { color: colors.primary }]}>✓</Text>
                 )}
               </TouchableOpacity>
             ))}
@@ -202,13 +230,20 @@ export default function FilterSheet({ visible, onClose }: FilterSheetProps) {
 
           {/* Sort Options */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Sıralama</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Sıralama</Text>
             {SORT_OPTIONS.map((option) => (
               <TouchableOpacity
                 key={option.key}
                 style={[
                   styles.option,
-                  localFilters.sort === option.key && styles.optionSelected
+                  { 
+                    backgroundColor: colors.surface,
+                    borderColor: colors.border,
+                  },
+                  localFilters.sort === option.key && [styles.optionSelected, { 
+                    backgroundColor: colors.primaryLight,
+                    borderColor: colors.primary 
+                  }]
                 ]}
                 onPress={() => handleSortChange(option.key)}
                 accessibilityRole="button"
@@ -217,12 +252,13 @@ export default function FilterSheet({ visible, onClose }: FilterSheetProps) {
               >
                 <Text style={[
                   styles.optionText,
-                  localFilters.sort === option.key && styles.optionTextSelected
+                  { color: colors.text },
+                  localFilters.sort === option.key && [styles.optionTextSelected, { color: colors.primary }]
                 ]}>
                   {option.label}
                 </Text>
                 {localFilters.sort === option.key && (
-                  <Text style={styles.checkmark}>✓</Text>
+                  <Text style={[styles.checkmark, { color: colors.primary }]}>✓</Text>
                 )}
               </TouchableOpacity>
             ))}
@@ -230,15 +266,19 @@ export default function FilterSheet({ visible, onClose }: FilterSheetProps) {
         </ScrollView>
 
         {/* Footer */}
-        <View style={styles.footer}>
+        <View style={[styles.footer, { backgroundColor: colors.card, borderTopColor: colors.border }]}>
           <TouchableOpacity
-            style={[styles.applyButton, !hasChanges() && styles.applyButtonDisabled]}
+            style={[
+              styles.applyButton, 
+              { backgroundColor: colors.primary },
+              !hasChanges() && [styles.applyButtonDisabled, { backgroundColor: colors.textMuted }]
+            ]}
             onPress={handleApply}
             disabled={!hasChanges()}
             accessibilityRole="button"
             accessibilityLabel="Filtreleri uygula"
           >
-            <Text style={styles.applyButtonText}>Uygula</Text>
+            <Text style={[styles.applyButtonText, { color: colors.buttonText }]}>Uygula</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -249,7 +289,6 @@ export default function FilterSheet({ visible, onClose }: FilterSheetProps) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
   },
   header: {
     flexDirection: 'row',
@@ -257,30 +296,25 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 20,
     paddingVertical: 16,
-    backgroundColor: '#fff',
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
   },
   closeButton: {
     paddingVertical: 8,
     paddingHorizontal: 12,
   },
   closeButtonText: {
-    color: '#007AFF',
     fontSize: 16,
     fontWeight: '500',
   },
   title: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#333',
   },
   resetButton: {
     paddingVertical: 8,
     paddingHorizontal: 12,
   },
   resetButtonText: {
-    color: '#f44336',
     fontSize: 16,
     fontWeight: '500',
   },
@@ -294,7 +328,6 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#333',
     marginBottom: 16,
   },
   priceInputs: {
@@ -306,17 +339,14 @@ const styles = StyleSheet.create({
   },
   priceLabel: {
     fontSize: 14,
-    color: '#666',
     marginBottom: 8,
   },
   input: {
     borderWidth: 1,
-    borderColor: '#e0e0e0',
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 12,
     fontSize: 16,
-    backgroundColor: '#fff',
   },
   option: {
     flexDirection: 'row',
@@ -324,46 +354,36 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 16,
     paddingHorizontal: 16,
-    backgroundColor: '#fff',
     borderRadius: 8,
     marginBottom: 8,
     borderWidth: 1,
-    borderColor: '#e0e0e0',
   },
   optionSelected: {
-    backgroundColor: '#e3f2fd',
-    borderColor: '#2196f3',
+    // Tema renkleri ile override edilecek
   },
   optionText: {
     fontSize: 16,
-    color: '#333',
   },
   optionTextSelected: {
-    color: '#1976d2',
     fontWeight: '500',
   },
   checkmark: {
     fontSize: 18,
-    color: '#2196f3',
     fontWeight: 'bold',
   },
   footer: {
     padding: 20,
-    backgroundColor: '#fff',
     borderTopWidth: 1,
-    borderTopColor: '#e0e0e0',
   },
   applyButton: {
-    backgroundColor: '#007AFF',
     paddingVertical: 16,
     borderRadius: 8,
     alignItems: 'center',
   },
   applyButtonDisabled: {
-    backgroundColor: '#9ca3af',
+    // Tema renkleri ile override edilecek
   },
   applyButtonText: {
-    color: '#fff',
     fontSize: 16,
     fontWeight: '600',
   },

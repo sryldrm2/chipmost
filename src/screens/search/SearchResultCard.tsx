@@ -1,6 +1,8 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { useTheme } from '../../context/ThemeContext';
 import { format } from '../../utils/currency';
+import type { PartSearchRequest } from '../../types/partSearch';
 
 interface SearchResultCardProps {
   id: string;
@@ -25,49 +27,66 @@ export default function SearchResultCard({
   moq,
   onPress 
 }: SearchResultCardProps) {
+  const { colors } = useTheme();
+
   return (
-    <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.7}>
+    <TouchableOpacity style={[styles.card, { 
+      backgroundColor: colors.card,
+      borderColor: colors.border,
+      shadowColor: colors.shadow,
+    }]} onPress={onPress} activeOpacity={0.7}>
       <View style={styles.header}>
-        <Text style={styles.title}>{title}</Text>
+        <Text style={[styles.title, { color: colors.text }]}>{title}</Text>
         <View style={styles.headerRight}>
-          <Text style={styles.category}>{category}</Text>
+          <Text style={[styles.category, { 
+            color: colors.primary,
+            backgroundColor: colors.primaryLight,
+          }]}>{category}</Text>
           <View style={styles.stockContainer}>
             <View style={[
               styles.stockIndicator, 
-              { backgroundColor: inStock ? '#28a745' : '#dc3545' }
+              { backgroundColor: inStock ? colors.success : colors.error }
             ]} />
-            <Text style={[styles.stockStatus, { color: inStock ? '#28a745' : '#dc3545' }]}>
+            <Text style={[styles.stockStatus, { color: inStock ? colors.success : colors.error }]}>
               {inStock ? '✓ Stokta' : '✗ Stok Yok'}
             </Text>
           </View>
         </View>
       </View>
       
-      <Text style={styles.description} numberOfLines={2}>{description}</Text>
+      <Text style={[styles.description, { color: colors.textSecondary }]} numberOfLines={2}>{description}</Text>
       
       <View style={styles.footer}>
         <View style={styles.footerLeft}>
-          <Text style={styles.id}>ID: {id}</Text>
+          <Text style={[styles.id, { color: colors.textMuted }]}>ID: {id}</Text>
           <View style={styles.priceContainer}>
-            <Text style={styles.price}>
+            <Text style={[styles.price, { color: colors.success }]}>
               {format(price, currency)}
             </Text>
             {currency !== 'TRY' && (
-              <Text style={styles.priceTRY}>
+              <Text style={[styles.priceTRY, { color: colors.textMuted }]}>
                 ≈ {format(price, 'TRY')} (yaklaşık)
               </Text>
             )}
           </View>
           {moq && moq > 1 && (
-            <Text style={styles.moqInfo}>Min. sipariş: {moq} adet</Text>
+            <Text style={[styles.moqInfo, { color: colors.textMuted }]}>Min. sipariş: {moq} adet</Text>
           )}
         </View>
         <TouchableOpacity 
-          style={[styles.detailButton, !inStock && styles.detailButtonDisabled]}
+          style={[
+            styles.detailButton, 
+            { backgroundColor: colors.primary },
+            !inStock && [styles.detailButtonDisabled, { backgroundColor: colors.textMuted }]
+          ]}
           onPress={onPress}
           disabled={!inStock}
         >
-          <Text style={[styles.detailButtonText, !inStock && styles.detailButtonTextDisabled]}>
+          <Text style={[
+            styles.detailButtonText, 
+            { color: colors.buttonText },
+            !inStock && [styles.detailButtonTextDisabled, { color: colors.textMuted }]
+          ]}>
             {inStock ? 'Detaya Git' : 'Stok Yok'}
           </Text>
         </TouchableOpacity>
@@ -78,11 +97,9 @@ export default function SearchResultCard({
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#fff',
     borderRadius: 16,
     padding: 20,
     marginBottom: 16,
-    shadowColor: '#000',
     shadowOffset: {
       width: 0,
       height: 2,
@@ -91,7 +108,6 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 4,
     borderWidth: 1,
-    borderColor: '#f0f0f0',
   },
   header: {
     flexDirection: 'row',
@@ -103,7 +119,6 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#1a1a1a',
     flex: 1,
     marginRight: 12,
     lineHeight: 24,
@@ -113,8 +128,6 @@ const styles = StyleSheet.create({
   },
   category: {
     fontSize: 12,
-    color: '#007AFF',
-    backgroundColor: '#f0f8ff',
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 16,
@@ -138,7 +151,6 @@ const styles = StyleSheet.create({
   },
   description: {
     fontSize: 15,
-    color: '#4a4a4a',
     lineHeight: 22,
     marginBottom: 12,
     fontWeight: '400',
@@ -153,7 +165,6 @@ const styles = StyleSheet.create({
   },
   id: {
     fontSize: 12,
-    color: '#999',
     fontStyle: 'italic',
     marginBottom: 4,
   },
@@ -163,25 +174,20 @@ const styles = StyleSheet.create({
   price: {
     fontSize: 20,
     fontWeight: '800',
-    color: '#28a745',
     marginBottom: 4,
   },
   priceTRY: {
     fontSize: 12,
-    color: '#6b7280',
     fontStyle: 'italic',
   },
   moqInfo: {
     fontSize: 11,
-    color: '#6b7280',
     fontStyle: 'italic',
   },
   detailButton: {
-    backgroundColor: '#007AFF',
     paddingHorizontal: 20,
     paddingVertical: 12,
     borderRadius: 8,
-    shadowColor: '#007AFF',
     shadowOffset: {
       width: 0,
       height: 2,
@@ -191,14 +197,13 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   detailButtonText: {
-    color: '#fff',
     fontSize: 14,
     fontWeight: '600',
   },
   detailButtonDisabled: {
-    backgroundColor: '#9ca3af',
+    // Tema renkleri ile override edilecek
   },
   detailButtonTextDisabled: {
-    color: '#f3f4f6',
+    // Tema renkleri ile override edilecek
   },
 });
