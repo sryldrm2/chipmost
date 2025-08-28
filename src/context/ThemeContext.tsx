@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { useColorScheme } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -132,8 +132,8 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [theme, setThemeState] = useState<ThemeType>('system');
   const [colors, setColors] = useState<ColorPalette>(lightColors);
 
-  // Tema değişikliğini uygula
-  const applyTheme = (newTheme: ThemeType) => {
+  // Tema değişikliğini uygula - useCallback ile optimize edildi
+  const applyTheme = useCallback((newTheme: ThemeType) => {
     let effectiveTheme: 'light' | 'dark';
     
     if (newTheme === 'system') {
@@ -142,30 +142,34 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       effectiveTheme = newTheme;
     }
     
+    // Tema değişikliğini batch olarak yap
     setColors(effectiveTheme === 'dark' ? darkColors : lightColors);
-  };
+  }, [systemColorScheme]);
 
-  // Tema değiştir
-  const setTheme = async (newTheme: ThemeType) => {
+  // Tema değiştir - useCallback ile optimize edildi
+  const setTheme = useCallback(async (newTheme: ThemeType) => {
     try {
-      await AsyncStorage.setItem('chipmost_theme', newTheme);
+      // Önce state'i güncelle, sonra AsyncStorage'a kaydet
       setThemeState(newTheme);
       applyTheme(newTheme);
+      
+      // AsyncStorage işlemini arka planda yap
+      await AsyncStorage.setItem('chipmost_theme', newTheme);
     } catch (error) {
       console.error('Tema kaydedilemedi:', error);
     }
-  };
+  }, [applyTheme]);
 
-  // Tema toggle
-  const toggleTheme = () => {
+  // Tema toggle - useCallback ile optimize edildi
+  const toggleTheme = useCallback(() => {
     const newTheme = theme === 'light' ? 'dark' : 'light';
     setTheme(newTheme);
-  };
+  }, [theme, setTheme]);
 
   // Sistem teması değişikliğini dinle
   useEffect(() => {
     applyTheme(theme);
-  }, [theme, systemColorScheme]);
+  }, [theme, systemColorScheme, applyTheme]);
 
   // Kaydedilen temayı yükle
   useEffect(() => {
@@ -183,13 +187,14 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     loadSavedTheme();
   }, []);
 
-  const value: ThemeContextType = {
+  // Context value'yu useMemo ile optimize et
+  const value = useMemo<ThemeContextType>(() => ({
     theme,
     colors,
     isDark: colors === darkColors,
     setTheme,
     toggleTheme,
-  };
+  }), [theme, colors, setTheme, toggleTheme]);
 
   return (
     <ThemeContext.Provider value={value}>

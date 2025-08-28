@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { createDrawerNavigator } from '@react-navigation/drawer';
 import { createStackNavigator } from '@react-navigation/stack';
 import { NavigationContainer } from '@react-navigation/native';
 import { RootStackParamList } from '../types/navigation';
 import MainTabNavigator from './MainTabNavigator';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import SignInScreen from '../screens/auth/SignInScreen';
 import SignUpScreen from '../screens/auth/SignUpScreen';
 import ForgotPasswordScreen from '../screens/auth/ForgotPasswordScreen';
@@ -45,18 +46,22 @@ function MainAppStack() {
 
 export default function RootNavigator() {
   const { state: authState } = useAuth();
+  const { colors } = useTheme();
+
+  // Drawer style'ını useMemo ile optimize et
+  const drawerStyle = useMemo(() => ({
+    backgroundColor: colors.card,
+    width: 280,
+  }), [colors]);
 
   return (
     <NavigationContainer linking={linking}>
       <Drawer.Navigator
         screenOptions={{
           headerShown: false,
-          drawerStyle: {
-            backgroundColor: '#FFFFFF',
-            width: 280,
-          },
-          drawerActiveTintColor: '#007AFF',
-          drawerInactiveTintColor: '#8E8E93',
+          drawerStyle: drawerStyle,
+          drawerActiveTintColor: colors.primary,
+          drawerInactiveTintColor: colors.textSecondary,
           drawerLabelStyle: {
             fontSize: 16,
             fontWeight: '500',

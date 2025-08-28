@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import { View, Text, StyleSheet } from 'react-native';
@@ -17,6 +17,24 @@ export default function MainTabNavigator() {
   const { state: authState } = useAuth();
   const { colors } = useTheme();
   
+  // Tab bar style'ını useMemo ile optimize et
+  const tabBarStyle = useMemo(() => ({
+    backgroundColor: colors.card,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+    paddingBottom: 5,
+    paddingTop: 5,
+    height: 60,
+    shadowColor: colors.shadow,
+    shadowOffset: {
+      width: 0,
+      height: -2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 8,
+  }), [colors]);
+
   // Cart tab için özel icon component
   function CartTabIcon({ focused, color, size }: { focused: boolean; color: string; size: number }) {
     const { totalCount } = useCart();
@@ -62,22 +80,7 @@ export default function MainTabNavigator() {
         },
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.textSecondary,
-        tabBarStyle: {
-          backgroundColor: colors.card,
-          borderTopWidth: 1,
-          borderTopColor: colors.border,
-          paddingBottom: 5,
-          paddingTop: 5,
-          height: 60,
-          shadowColor: colors.shadow,
-          shadowOffset: {
-            width: 0,
-            height: -2,
-          },
-          shadowOpacity: 0.1,
-          shadowRadius: 3,
-          elevation: 8,
-        },
+        tabBarStyle: tabBarStyle,
         tabBarLabelStyle: {
           fontSize: 12,
           fontWeight: '600',

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -7,6 +7,7 @@ import {
   ScrollView,
   SafeAreaView,
   StatusBar,
+  ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
@@ -16,6 +17,7 @@ import { ThemeType } from '../../context/ThemeContext';
 export default function ThemeSettingsScreen() {
   const navigation = useNavigation();
   const { theme, colors, setTheme, isDark } = useTheme();
+  const [isChangingTheme, setIsChangingTheme] = useState(false);
 
   const themeOptions: Array<{
     type: ThemeType;
@@ -43,12 +45,23 @@ export default function ThemeSettingsScreen() {
     },
   ];
 
-  const handleThemeSelect = (selectedTheme: ThemeType) => {
-    setTheme(selectedTheme);
+  const handleThemeSelect = async (selectedTheme: ThemeType) => {
+    if (selectedTheme === theme || isChangingTheme) return;
+    
+    setIsChangingTheme(true);
+    try {
+      await setTheme(selectedTheme);
+    } catch (error) {
+      console.error('Tema değiştirilemedi:', error);
+    } finally {
+      // Kısa bir gecikme ile loading state'i kaldır
+      setTimeout(() => setIsChangingTheme(false), 300);
+    }
   };
 
   const renderThemeOption = (option: typeof themeOptions[0]) => {
     const isSelected = theme === option.type;
+    const isDisabled = isChangingTheme;
     
     return (
       <Pressable
@@ -58,9 +71,11 @@ export default function ThemeSettingsScreen() {
           {
             backgroundColor: colors.card,
             borderColor: isSelected ? colors.primary : colors.border,
+            opacity: isDisabled ? 0.6 : 1,
           },
         ]}
         onPress={() => handleThemeSelect(option.type)}
+        disabled={isDisabled}
       >
         <View style={styles.themeOptionHeader}>
           <View style={[
@@ -69,11 +84,15 @@ export default function ThemeSettingsScreen() {
               backgroundColor: isSelected ? colors.primary : colors.surface,
             }
           ]}>
-            <Ionicons
-              name={option.icon}
-              size={24}
-              color={isSelected ? colors.buttonText : colors.textSecondary}
-            />
+            {isChangingTheme && isSelected ? (
+              <ActivityIndicator size="small" color={colors.buttonText} />
+            ) : (
+              <Ionicons
+                name={option.icon}
+                size={24}
+                color={isSelected ? colors.buttonText : colors.textSecondary}
+              />
+            )}
           </View>
           
           <View style={styles.themeOptionContent}>
