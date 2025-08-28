@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { StackNavigationProp } from '@react-navigation/stack';
-import type { SearchStackParamList } from '../../../types/navigation';
+import type { SearchStackParamList } from '../../../navigation/SearchStack';
 import { useSearchFilters } from '../SearchFilterContext';
 import SearchResultCard from '../../../screens/search/SearchResultCard';
 import type { Product } from '../../../types/product';
@@ -28,6 +28,8 @@ export default function SearchResultsList({ onLoadMore, onRefresh }: SearchResul
   const { results, isLoading, error, hasMore } = state;
 
   const handleResultPress = useCallback((product: Product) => {
+    console.log('Navigating to ProductDetail with ID:', product.id);
+    console.log('Navigation state:', JSON.stringify(navigation.getState(), null, 2));
     navigation.navigate('ProductDetail', { productId: product.id });
   }, [navigation]);
 
@@ -198,6 +200,12 @@ const styles = StyleSheet.create({
     color: '#666',
     textAlign: 'center',
     lineHeight: 24,
+  },
+  emptyStateText: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+    marginTop: 16,
   },
   errorIcon: {
     fontSize: 48,

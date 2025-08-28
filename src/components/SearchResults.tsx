@@ -1,120 +1,23 @@
 import React from 'react';
-import {
-  View,
-  Text,
-  FlatList,
-  TouchableOpacity,
-  StyleSheet,
-  Alert,
-} from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { View, Text, StyleSheet, FlatList, ActivityIndicator } from 'react-native';
 import { useTheme } from '../context/ThemeContext';
-import { useCart } from '../cart/CartContext';
 import { SupplierResult } from '../types/partSearch';
+import SearchResultCard from '../screens/search/SearchResultCard';
 
-interface SearchResultsProps {
+type Props = {
   results: SupplierResult[];
   isLoading: boolean;
-  searchTime?: number;
-}
+  searchTime: number;
+  onProductPress: (productId: string) => void;
+};
 
-export default function SearchResults({ results, isLoading, searchTime }: SearchResultsProps) {
+export default function SearchResults({ results, isLoading, searchTime, onProductPress }: Props) {
   const { colors } = useTheme();
-  const { addItem } = useCart();
-
-  const handleAddToCart = (result: SupplierResult) => {
-    // MOQ kontrolü - minimum sipariş miktarını sağla
-    const qty = Math.max(1, result.moq ?? 1);
-    
-    // Cart item formatına dönüştür
-    const cartItem = {
-      id: `${result.supplier}-${result.partNumber}`,
-      name: `${result.partNumber} - ${result.supplier}`,
-      unitPrice: result.price,
-      currency: result.currency || 'USD',
-      moq: result.moq,
-      thumbnail: null,
-      inStock: result.stock > 0,
-    };
-
-    addItem(cartItem, qty);
-    
-    Alert.alert(
-      'Başarılı',
-      `${result.partNumber} sepetinize eklendi!${result.moq && result.moq > 1 ? ` (${qty} adet - minimum sipariş)` : ''}`,
-      [{ text: 'Tamam', style: 'default' }]
-    );
-  };
-
-  const renderResultItem = ({ item }: { item: SupplierResult }) => (
-    <View
-      style={[styles.resultCard, { backgroundColor: colors.card, borderColor: colors.border }]}
-    >
-      {/* Supplier Header */}
-      <View style={styles.supplierHeader}>
-        <View style={[styles.supplierBadge, { backgroundColor: getSupplierColor(item.supplier) }]}>
-          <Text style={styles.supplierText}>{item.supplier}</Text>
-        </View>
-        <View style={styles.priceContainer}>
-          <Text style={[styles.price, { color: colors.accent }]}>
-            {item.price.toFixed(2)} {item.currency}
-          </Text>
-          <Text style={[styles.priceLabel, { color: colors.textSecondary }]}>Birim Fiyat</Text>
-        </View>
-      </View>
-
-      {/* Part Info */}
-      <View style={styles.partInfo}>
-        <Text style={[styles.partNumber, { color: colors.text }]} numberOfLines={1}>
-          {item.partNumber}
-        </Text>
-        <Text style={[styles.description, { color: colors.textSecondary }]} numberOfLines={2}>
-          {item.description}
-        </Text>
-      </View>
-
-      {/* Stock and Lead Time */}
-      <View style={styles.detailsRow}>
-        <View style={styles.detailItem}>
-          <Ionicons name="cube" size={16} color={colors.textSecondary} />
-          <Text style={[styles.detailText, { color: colors.textSecondary }]}>
-            Stok: {item.stock.toLocaleString()}
-          </Text>
-        </View>
-        <View style={styles.detailItem}>
-          <Ionicons name="time" size={16} color={colors.textSecondary} />
-          <Text style={[styles.detailText, { color: colors.textSecondary }]}>
-            {item.leadTime}
-          </Text>
-        </View>
-      </View>
-
-      {/* MOQ */}
-      <View style={styles.moqContainer}>
-        <Text style={[styles.moqLabel, { color: colors.textSecondary }]}>
-          Minimum Sipariş Miktarı:
-        </Text>
-        <Text style={[styles.moqValue, { color: colors.text }]}>
-          {item.moq} adet
-        </Text>
-      </View>
-
-      {/* Add to Cart Button */}
-      <View style={styles.actionRow}>
-        <TouchableOpacity
-          style={[styles.addToCartButton, { backgroundColor: colors.accent }]}
-          onPress={() => handleAddToCart(item)}
-        >
-          <Ionicons name="cart-outline" size={16} color="#fff" />
-          <Text style={styles.addToCartButtonText}>Sepete Ekle</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
-  );
 
   if (isLoading) {
     return (
-      <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={colors.primary} />
         <Text style={[styles.loadingText, { color: colors.textSecondary }]}>
           Arama yapılıyor...
         </Text>
@@ -124,54 +27,72 @@ export default function SearchResults({ results, isLoading, searchTime }: Search
 
   if (results.length === 0) {
     return (
-      <View style={[styles.emptyContainer, { backgroundColor: colors.background }]}>
-        <Ionicons name="search-outline" size={48} color={colors.textSecondary} />
-        <Text style={[styles.emptyTitle, { color: colors.text }]}>
-          Henüz arama yapılmadı
+      <View style={styles.emptyContainer}>
+        <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
+          Arama sonucu bulunamadı
         </Text>
-        <Text style={[styles.emptySubtitle, { color: colors.textSecondary }]}>
-          Parça numarası girip arama yapın
+        <Text style={[styles.emptySubtext, { color: colors.textTertiary }]}>
+          Farklı anahtar kelimeler deneyin
         </Text>
       </View>
     );
   }
 
-  return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
-      {/* Results Header */}
-      <View style={styles.resultsHeader}>
-        <Text style={[styles.resultsTitle, { color: colors.text }]}>
-          {results.length} sonuç bulundu
+  const renderSupplierResults = ({ item }: { item: SupplierResult }) => (
+    <View style={styles.supplierSection}>
+      <View style={styles.supplierHeader}>
+        <Text style={[styles.supplierName, { color: colors.text }]}>
+          {item.supplierName}
         </Text>
-        {searchTime && (
-          <Text style={[styles.searchTime, { color: colors.textSecondary }]}>
-            {searchTime}ms
-          </Text>
-        )}
+        <Text style={[styles.resultCount, { color: colors.textSecondary }]}>
+          {item.results.length} sonuç
+        </Text>
       </View>
-
-      {/* Results List */}
+      
       <FlatList
-        data={results}
-        keyExtractor={(item, index) => `${item.supplier}-${index}`}
-        renderItem={renderResultItem}
-        contentContainerStyle={styles.resultsList}
+        data={item.results}
+        keyExtractor={(result) => result.id}
+        renderItem={({ item: result }) => (
+          <SearchResultCard
+            id={result.id}
+            title={result.name}
+            description={result.description}
+            price={result.price}
+            currency={result.currency}
+            inStock={result.inStock}
+            stockQty={result.stockQty}
+            category={result.category}
+            mpn={result.mpn}
+            imageUrl={result.imageUrl}
+            moq={result.moq}
+            onPress={() => onProductPress(result.id)}
+          />
+        )}
+        scrollEnabled={false}
         showsVerticalScrollIndicator={false}
-        ItemSeparatorComponent={() => <View style={{ height: 16 }} />}
       />
     </View>
   );
-}
 
-// Supplier renkleri
-function getSupplierColor(supplier: string): string {
-  const colors: { [key: string]: string } = {
-    'Digi-Key': '#CC0000',
-    'Mouser': '#004990',
-    'Farnell': '#FF6600',
-    'LCSC': '#00A0E9',
-  };
-  return colors[supplier] || '#666666';
+  return (
+    <View style={styles.container}>
+      {searchTime > 0 && (
+        <View style={styles.searchInfo}>
+          <Text style={[styles.searchTime, { color: colors.textSecondary }]}>
+            {results.length} sonuç {searchTime}ms'de bulundu
+          </Text>
+        </View>
+      )}
+      
+      <FlatList
+        data={results}
+        keyExtractor={(item) => item.supplierName}
+        renderItem={renderSupplierResults}
+        contentContainerStyle={styles.resultsList}
+        showsVerticalScrollIndicator={false}
+      />
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({
@@ -185,8 +106,8 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   loadingText: {
+    marginTop: 16,
     fontSize: 16,
-    marginTop: 12,
   },
   emptyContainer: {
     flex: 1,
@@ -194,131 +115,45 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 20,
   },
-  emptyTitle: {
+  emptyText: {
     fontSize: 18,
     fontWeight: '600',
-    marginTop: 16,
     marginBottom: 8,
   },
-  emptySubtitle: {
+  emptySubtext: {
     fontSize: 14,
     textAlign: 'center',
-    lineHeight: 20,
   },
-  resultsHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
+  searchInfo: {
+    padding: 16,
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(0,0,0,0.1)',
   },
-  resultsTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-  },
   searchTime: {
     fontSize: 14,
+    textAlign: 'center',
   },
   resultsList: {
-    padding: 20,
-  },
-  resultCard: {
-    borderRadius: 16,
     padding: 16,
-    borderWidth: 1,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+  },
+  supplierSection: {
+    marginBottom: 24,
   },
   supplierHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 12,
+    alignItems: 'center',
+    marginBottom: 16,
+    paddingHorizontal: 4,
   },
-  supplierBadge: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20,
-  },
-  supplierText: {
-    color: '#fff',
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  priceContainer: {
-    alignItems: 'flex-end',
-  },
-  price: {
+  supplierName: {
     fontSize: 18,
     fontWeight: '700',
   },
-  priceLabel: {
-    fontSize: 12,
-    marginTop: 2,
-  },
-  partInfo: {
-    marginBottom: 12,
-  },
-  partNumber: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 4,
-  },
-  description: {
+  resultCount: {
     fontSize: 14,
-    lineHeight: 20,
-  },
-  detailsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 12,
-  },
-  detailItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  detailText: {
-    fontSize: 14,
-    marginLeft: 6,
-  },
-  moqContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(0,0,0,0.1)',
-  },
-  moqLabel: {
-    fontSize: 14,
-  },
-  moqValue: {
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  actionRow: {
-    alignItems: 'center',
-  },
-  addToCartButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 20,
-  },
-  addToCartButtonText: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: '600',
-    marginLeft: 6,
+    fontWeight: '500',
   },
 });
+
+

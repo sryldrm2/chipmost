@@ -12,8 +12,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { useCheckout } from '../../context/CheckoutContext';
 import { useCart } from '../../cart/CartContext';
-import { orderService } from '../../services/orderService';
-import { notificationService } from '../../services/notificationService';
+// Mock services - gerçek uygulamada backend'den gelecek
 
 export default function OrderSummaryScreen() {
   const navigation = useNavigation<any>();
@@ -56,7 +55,7 @@ export default function OrderSummaryScreen() {
   };
 
   const calculateSubtotal = () => {
-    return cartState.lines.reduce((sum: number, item) => sum + (item.price * item.qty), 0);
+    return cartState.lines.reduce((sum: number, item) => sum + (item.unitPrice * item.qty), 0);
   };
 
   const calculateShipping = () => {
@@ -86,30 +85,22 @@ export default function OrderSummaryScreen() {
     setProcessing(true);
 
     try {
-      // Sipariş oluştur
+      // Mock sipariş oluşturma - gerçek uygulamada API'ye gönderilecek
       const total = calculateTotal();
-      const newOrder = await orderService.createOrder(
-        cartState.lines,
-        total,
-        state.selectedAddress!,
-        state.selectedPaymentMethod!
-      );
+      const orderNumber = `ORD-${Date.now().toString().slice(-6)}`;
       
-      console.log('Order created:', newOrder);
+      console.log('Mock order created:', { orderNumber, total });
       
       // Checkout state'ini güncelle
-      setOrderNumber(newOrder.orderNumber);
+      setOrderNumber(orderNumber);
       
       // Sepeti temizle
       clear();
       
-      // Push notification'ları planla
-      await notificationService.scheduleOrderStatusUpdates(newOrder.orderNumber);
-      
-      console.log('Navigating to OrderSuccess with orderNumber:', newOrder.orderNumber);
+      console.log('Navigating to OrderSuccess with orderNumber:', orderNumber);
       
       // Başarı ekranına yönlendir
-      navigation.navigate('OrderSuccess', { orderNumber: newOrder.orderNumber });
+      navigation.navigate('OrderSuccess', { orderNumber });
       
     } catch (error) {
       console.error('Error in handlePlaceOrder:', error);
@@ -125,7 +116,7 @@ export default function OrderSummaryScreen() {
         <Text style={styles.itemName}>{item.name}</Text>
         <Text style={styles.itemQuantity}>x{item.qty}</Text>
       </View>
-      <Text style={styles.itemPrice}>₺{(item.price * item.qty).toFixed(2)}</Text>
+      <Text style={styles.itemPrice}>₺{(item.unitPrice * item.qty).toFixed(2)}</Text>
     </View>
   );
 

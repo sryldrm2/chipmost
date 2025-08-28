@@ -18,6 +18,18 @@ export default function AccountHomeScreen() {
   const navigation = useNavigation<any>();
   const { colors } = useTheme();
 
+  const getAvatarColor = (avatarIndex: number) => {
+    const avatarColors = [
+      '#3B82F6', // Mavi (0)
+      '#10B981', // Yeşil (1)
+      '#F59E0B', // Turuncu (2)
+      '#8B5CF6', // Mor (3)
+      '#EC4899', // Pembe (4)
+      '#EF4444', // Kırmızı (5)
+    ];
+    return avatarColors[avatarIndex] || colors.primary;
+  };
+
   const handleSignOut = () => {
     Alert.alert(
       'Çıkış Yap',
@@ -67,19 +79,19 @@ export default function AccountHomeScreen() {
 
   if (state.isLoading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#111" />
-        <Text style={styles.loadingText}>Yükleniyor...</Text>
+      <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
+        <ActivityIndicator size="large" color={colors.primary} />
+        <Text style={[styles.loadingText, { color: colors.textSecondary }]}>Yükleniyor...</Text>
       </View>
     );
   }
 
   if (!state.user) {
     return (
-      <View style={styles.errorContainer}>
-        <Ionicons name="alert-circle" size={48} color="#dc3545" />
+      <View style={[styles.errorContainer, { backgroundColor: colors.background }]}>
+        <Ionicons name="alert-circle" size={48} color={colors.error} />
         <Text style={styles.errorTitle}>Kullanıcı bilgisi bulunamadı</Text>
-        <Text style={styles.errorText}>
+        <Text style={[styles.errorText, { color: colors.textSecondary }]}>
           Lütfen tekrar giriş yapmayı deneyin.
         </Text>
       </View>
@@ -89,20 +101,25 @@ export default function AccountHomeScreen() {
   return (
     <ScrollView style={[styles.container, { backgroundColor: colors.background }]} contentContainerStyle={styles.content}>
       {/* Header */}
-      <View style={styles.header}>
-        <View style={[styles.avatarContainer, { backgroundColor: colors.primary }]}>
+      <View style={[styles.header, { backgroundColor: colors.card, borderColor: colors.border }]}>
+        <View style={[styles.avatarContainer, { backgroundColor: getAvatarColor(state.user.avatar || 0) }]}>
           <Text style={[styles.avatarText, { color: colors.buttonText }]}>
             {state.user.firstName.charAt(0)}{state.user.lastName.charAt(0)}
           </Text>
         </View>
         <View style={styles.userInfo}>
-          <Text style={[styles.userName, { color: colors.text }]}>{state.user.fullName}</Text>
+          <Text style={[styles.userName, { color: colors.text }]}>
+            {state.user.firstName} {state.user.lastName}
+          </Text>
           <Text style={[styles.userEmail, { color: colors.textSecondary }]}>{state.user.email}</Text>
+          {state.user.phone && (
+            <Text style={[styles.userPhone, { color: colors.textSecondary }]}>{state.user.phone}</Text>
+          )}
         </View>
       </View>
 
       {/* Welcome Section */}
-      <View style={styles.welcomeSection}>
+      <View style={[styles.welcomeSection, { backgroundColor: colors.card, borderColor: colors.border }]}>
         <Text style={[styles.welcomeTitle, { color: colors.text }]}>Hoş geldiniz! 👋</Text>
         <Text style={[styles.welcomeText, { color: colors.textSecondary }]}>
           Chipmost hesabınızı yönetin ve siparişlerinizi takip edin.
@@ -110,24 +127,24 @@ export default function AccountHomeScreen() {
       </View>
 
       {/* Quick Actions */}
-      <View style={styles.section}>
+      <View style={[styles.section, { backgroundColor: colors.card, borderColor: colors.border }]}>
         <Text style={[styles.sectionTitle, { color: colors.text }]}>Hızlı İşlemler</Text>
         <View style={styles.quickActions}>
-          <Pressable style={[styles.quickAction, { backgroundColor: colors.card, borderColor: colors.border }]} onPress={handleOrderHistory}>
+          <Pressable style={[styles.quickAction, { backgroundColor: colors.surface, borderColor: colors.border }]} onPress={handleOrderHistory}>
             <View style={[styles.quickActionIcon, { backgroundColor: colors.primary }]}>
               <Ionicons name="receipt" size={24} color={colors.buttonText} />
             </View>
             <Text style={[styles.quickActionText, { color: colors.text }]}>Sipariş Geçmişi</Text>
           </Pressable>
           
-          <Pressable style={[styles.quickAction, { backgroundColor: colors.card, borderColor: colors.border }]} onPress={handleAddresses}>
+          <Pressable style={[styles.quickAction, { backgroundColor: colors.surface, borderColor: colors.border }]} onPress={handleAddresses}>
             <View style={[styles.quickActionIcon, { backgroundColor: colors.success }]}>
               <Ionicons name="location" size={24} color={colors.buttonText} />
             </View>
             <Text style={[styles.quickActionText, { color: colors.text }]}>Adreslerim</Text>
           </Pressable>
           
-          <Pressable style={[styles.quickAction, { backgroundColor: colors.card, borderColor: colors.border }]} onPress={handlePaymentMethods}>
+          <Pressable style={[styles.quickAction, { backgroundColor: colors.surface, borderColor: colors.border }]} onPress={handlePaymentMethods}>
             <View style={[styles.quickActionIcon, { backgroundColor: colors.warning }]}>
               <Ionicons name="card" size={24} color={colors.buttonText} />
             </View>
@@ -137,10 +154,10 @@ export default function AccountHomeScreen() {
       </View>
 
       {/* Account Settings */}
-      <View style={styles.section}>
+      <View style={[styles.section, { backgroundColor: colors.card, borderColor: colors.border }]}>
         <Text style={[styles.sectionTitle, { color: colors.text }]}>Hesap Ayarları</Text>
         
-        <Pressable style={[styles.menuItem, { backgroundColor: colors.card, borderColor: colors.border }]} onPress={() => navigation.navigate('ProfileEdit')}>
+        <Pressable style={[styles.menuItem, { backgroundColor: colors.surface, borderColor: colors.border }]} onPress={() => navigation.navigate('ProfileEdit')}>
           <View style={styles.menuItemLeft}>
             <Ionicons name="person" size={20} color={colors.textSecondary} />
             <Text style={[styles.menuItemText, { color: colors.text }]}>Profil Bilgileri</Text>
@@ -148,7 +165,7 @@ export default function AccountHomeScreen() {
           <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
         </Pressable>
         
-        <Pressable style={[styles.menuItem, { backgroundColor: colors.card, borderColor: colors.border }]}>
+        <Pressable style={[styles.menuItem, { backgroundColor: colors.surface, borderColor: colors.border }]}>
           <View style={styles.menuItemLeft}>
             <Ionicons name="notifications" size={20} color={colors.textSecondary} />
             <Text style={[styles.menuItemText, { color: colors.text }]}>Bildirim Ayarları</Text>
@@ -156,7 +173,7 @@ export default function AccountHomeScreen() {
           <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
         </Pressable>
         
-        <Pressable style={[styles.menuItem, { backgroundColor: colors.card, borderColor: colors.border }]}>
+        <Pressable style={[styles.menuItem, { backgroundColor: colors.surface, borderColor: colors.border }]}>
           <View style={styles.menuItemLeft}>
             <Ionicons name="shield-checkmark" size={20} color={colors.textSecondary} />
             <Text style={[styles.menuItemText, { color: colors.text }]}>Güvenlik</Text>
@@ -164,7 +181,7 @@ export default function AccountHomeScreen() {
           <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
         </Pressable>
         
-        <Pressable style={[styles.menuItem, { backgroundColor: colors.card, borderColor: colors.border }]}>
+        <Pressable style={[styles.menuItem, { backgroundColor: colors.surface, borderColor: colors.border }]}>
           <View style={styles.menuItemLeft}>
             <Ionicons name="help-circle" size={20} color={colors.textSecondary} />
             <Text style={[styles.menuItemText, { color: colors.text }]}>Yardım & Destek</Text>
@@ -172,7 +189,7 @@ export default function AccountHomeScreen() {
           <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
         </Pressable>
         
-        <Pressable style={[styles.menuItem, { backgroundColor: colors.card, borderColor: colors.border }]} onPress={() => navigation.navigate('ThemeSettings')}>
+        <Pressable style={[styles.menuItem, { backgroundColor: colors.surface, borderColor: colors.border }]} onPress={() => navigation.navigate('ThemeSettings')}>
           <View style={styles.menuItemLeft}>
             <Ionicons name="color-palette" size={20} color={colors.textSecondary} />
             <Text style={[styles.menuItemText, { color: colors.text }]}>Tema Ayarları</Text>
@@ -210,36 +227,30 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#fff',
   },
   loadingText: {
     marginTop: 16,
     fontSize: 16,
-    color: '#666',
   },
   errorContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#fff',
     padding: 24,
   },
   errorTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#dc3545',
     marginTop: 16,
     marginBottom: 8,
   },
   errorText: {
     fontSize: 14,
-    color: '#666',
     textAlign: 'center',
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff',
     padding: 20,
     borderRadius: 16,
     marginBottom: 24,
@@ -248,12 +259,12 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 3,
+    borderWidth: 1,
   },
   avatarContainer: {
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: '#0a58ca',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 16,
@@ -261,7 +272,6 @@ const styles = StyleSheet.create({
   avatarText: {
     fontSize: 24,
     fontWeight: '800',
-    color: '#fff',
   },
   userInfo: {
     flex: 1,
@@ -269,15 +279,16 @@ const styles = StyleSheet.create({
   userName: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#111',
     marginBottom: 4,
   },
   userEmail: {
     fontSize: 14,
-    color: '#666',
+  },
+  userPhone: {
+    fontSize: 12,
+    marginTop: 2,
   },
   welcomeSection: {
-    backgroundColor: '#fff',
     padding: 20,
     borderRadius: 16,
     marginBottom: 24,
@@ -286,16 +297,15 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 3,
+    borderWidth: 1,
   },
   welcomeTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#111',
     marginBottom: 8,
   },
   welcomeText: {
     fontSize: 14,
-    color: '#666',
     lineHeight: 20,
   },
   section: {
@@ -307,11 +317,11 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 3,
+    borderWidth: 1,
   },
   sectionTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#111',
     marginBottom: 16,
   },
   quickActions: {
@@ -340,7 +350,6 @@ const styles = StyleSheet.create({
   },
   quickActionText: {
     fontSize: 12,
-    color: '#333',
     textAlign: 'center',
     fontWeight: '600',
   },
@@ -366,7 +375,6 @@ const styles = StyleSheet.create({
   },
   menuItemText: {
     fontSize: 16,
-    color: '#333',
     fontWeight: '500',
   },
   signOutSection: {
@@ -388,7 +396,6 @@ const styles = StyleSheet.create({
   signOutButtonText: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#dc3545',
   },
   footer: {
     alignItems: 'center',
@@ -396,7 +403,6 @@ const styles = StyleSheet.create({
   },
   footerText: {
     fontSize: 12,
-    color: '#999',
     textAlign: 'center',
   },
 });

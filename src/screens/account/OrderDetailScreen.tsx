@@ -12,8 +12,19 @@ import {
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import { orderService, Order } from '../../services/orderService';
-import { notificationService } from '../../services/notificationService';
+// Mock order service - gerçek uygulamada backend'den gelecek
+type Order = {
+  id: string;
+  orderNumber: string;
+  date: string;
+  total: number;
+  status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+  items: OrderItem[];
+  shippingAddress?: string;
+  paymentMethod?: string;
+  canCancel?: boolean;
+  canReturn?: boolean;
+};
 
 type OrderItem = {
   id: string;
@@ -45,21 +56,25 @@ export default function OrderDetailScreen() {
     setError('');
     
     try {
-      const foundOrder = await orderService.getOrderById(orderId);
+      // Mock order data - gerçek uygulamada API'den gelecek
+      const mockOrder: Order = {
+        id: orderId,
+        orderNumber: `ORD-${orderId}`,
+        date: new Date().toLocaleDateString('tr-TR'),
+        total: 1250.00,
+        status: 'processing',
+        canCancel: true,
+        canReturn: false,
+        shippingAddress: 'Atatürk Mah. Cumhuriyet Cad. No:123 D:4, Kadıköy/İstanbul',
+        paymentMethod: 'Kredi Kartı',
+        items: [
+          { id: '1', productName: 'RF Connector SMA Male', quantity: 2, price: 45.00 },
+          { id: '2', productName: 'BNC Connector Female', quantity: 1, price: 32.00 },
+          { id: '3', productName: 'Coaxial Cable RG58', quantity: 5, price: 228.00 }
+        ]
+      };
       
-      if (foundOrder) {
-        console.log('🔍 Sipariş yüklendi:', {
-          orderId: foundOrder.id,
-          status: foundOrder.status,
-          canCancel: foundOrder.canCancel,
-          canReturn: foundOrder.canReturn,
-          orderNumber: foundOrder.orderNumber
-        });
-        setOrder(foundOrder);
-      } else {
-        setError('Sipariş bulunamadı');
-        Alert.alert('Hata', 'Sipariş bulunamadı. Lütfen tekrar deneyin.');
-      }
+      setOrder(mockOrder);
     } catch (err: any) {
       setError('Sipariş yüklenirken bir hata oluştu');
       Alert.alert('Hata', 'Sipariş yüklenemedi. Lütfen tekrar deneyin.');
@@ -120,15 +135,6 @@ export default function OrderDetailScreen() {
   // Sipariş iptal et
   const handleCancelOrder = async () => {
     if (!order) return;
-    
-    console.log('🔍 İptal butonu tıklandı:', {
-      orderId: order.id,
-      status: order.status,
-      canCancel: order.canCancel,
-      orderNumber: order.orderNumber
-    });
-    
-    // Web simülatör için modal kullan
     setShowCancelModal(true);
   };
 
@@ -137,31 +143,11 @@ export default function OrderDetailScreen() {
     if (!order) return;
     
     try {
-      console.log('🚫 İptal işlemi başlatılıyor...');
-      console.log('📋 İptal öncesi sipariş durumu:', {
-        id: order.id,
-        status: order.status,
-        canCancel: order.canCancel
-      });
+      // Mock iptal işlemi - gerçek uygulamada API'ye gönderilecek
+      setOrder(prev => prev ? { ...prev, status: 'cancelled', canCancel: false } : null);
       
-      const success = await orderService.cancelOrder(order.id);
-      console.log('✅ İptal sonucu:', success);
-      
-      if (success) {
-        console.log('🎉 İptal başarılı, bildirim gönderiliyor...');
-        await notificationService.sendOrderCancelledNotification(order.orderNumber);
-        console.log('📱 Bildirim gönderildi, sipariş yenileniyor...');
-        
-        setShowCancelModal(false);
-        Alert.alert('Başarılı', 'Sipariş iptal edildi.');
-        console.log('🔄 Sipariş bilgileri yenileniyor...');
-        await loadOrder(); // Sipariş bilgilerini yenile
-        console.log('✅ Sipariş yenilendi');
-      } else {
-        console.log('❌ İptal başarısız - canCancel veya order bulunamadı');
-        setShowCancelModal(false);
-        Alert.alert('Hata', 'Sipariş iptal edilemedi.');
-      }
+      setShowCancelModal(false);
+      Alert.alert('Başarılı', 'Sipariş iptal edildi.');
     } catch (error) {
       console.error('❌ İptal hatası:', error);
       setShowCancelModal(false);
@@ -177,20 +163,11 @@ export default function OrderDetailScreen() {
     }
 
     try {
-      const success = await orderService.createReturnRequest(
-        order!.id,
-        returnReason,
-        returnDescription
-      );
-      
-      if (success) {
-        Alert.alert('Başarılı', 'İade talebiniz alındı. En kısa sürede size dönüş yapılacak.');
-        setShowReturnModal(false);
-        setReturnReason('');
-        setReturnDescription('');
-      } else {
-        Alert.alert('Hata', 'İade talebi oluşturulamadı.');
-      }
+      // Mock iade talebi - gerçek uygulamada API'ye gönderilecek
+      Alert.alert('Başarılı', 'İade talebiniz alındı. En kısa sürede size dönüş yapılacak.');
+      setShowReturnModal(false);
+      setReturnReason('');
+      setReturnDescription('');
     } catch (error) {
       Alert.alert('Hata', 'İade talebi sırasında bir hata oluştu.');
     }

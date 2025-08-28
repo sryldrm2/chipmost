@@ -93,7 +93,7 @@ export default function MainTabNavigator() {
       <Tab.Screen 
         name="Search" 
         component={SearchStack}
-        options={{ title: 'Arama' }}
+        options={{ title: 'Arama', headerShown: false }}
       />
       <Tab.Screen 
         name="Catalog" 

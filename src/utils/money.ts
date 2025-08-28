@@ -1,4 +1,5 @@
-export const tl = (value: number) =>
-  new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(value);
+export function tl(amount: number): string {
+  return `₺${amount.toFixed(2)}`;
+}
 
 

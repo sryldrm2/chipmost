@@ -88,20 +88,20 @@ const darkColors: ColorPalette = {
   
   background: '#0F172A',
   backgroundSecondary: '#1E293B',
-  surface: '#1E293B',
+  surface: '#334155',
   card: '#1E293B',
   
   text: '#F8FAFC',
   textSecondary: '#94A3B8',
   textMuted: '#64748B',
   
-  border: '#334155',
-  divider: '#475569',
+  border: '#475569',
+  divider: '#64748B',
   
   success: '#10B981',
   warning: '#F59E0B',
   error: '#EF4444',
-  errorBackground: '#FEF3F2',
+  errorBackground: '#7F1D1D',
   info: '#06B6D4',
   
   buttonPrimary: '#3B82F6',

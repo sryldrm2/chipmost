@@ -15,6 +15,7 @@ import {
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
+import { useTheme } from '../../context/ThemeContext';
 
 type ProfileEditRouteParams = {
   ProfileEdit: undefined;
@@ -23,12 +24,13 @@ type ProfileEditRouteParams = {
 export default function ProfileEditScreen() {
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
-  const { state: authState } = useAuth();
+  const { state: authState, updateProfile } = useAuth();
+  const { colors } = useTheme();
   
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [phone, setPhone] = useState('');
-  const [selectedAvatar, setSelectedAvatar] = useState(0);
+  const [selectedAvatar, setSelectedAvatar] = useState(authState.user?.avatar || 0);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   
@@ -43,19 +45,20 @@ export default function ProfileEditScreen() {
 
   // Avatar seçenekleri
   const avatarOptions = [
-    { id: 0, name: 'Varsayılan', color: '#0a58ca' },
-    { id: 1, name: 'Yeşil', color: '#198754' },
-    { id: 2, name: 'Turuncu', color: '#fd7e14' },
-    { id: 3, name: 'Mor', color: '#6f42c1' },
-    { id: 4, name: 'Pembe', color: '#e83e8c' },
-    { id: 5, name: 'Kırmızı', color: '#dc3545' },
+    { id: 0, name: 'Mavi', color: '#3B82F6' },
+    { id: 1, name: 'Yeşil', color: '#10B981' },
+    { id: 2, name: 'Turuncu', color: '#F59E0B' },
+    { id: 3, name: 'Mor', color: '#8B5CF6' },
+    { id: 4, name: 'Pembe', color: '#EC4899' },
+    { id: 5, name: 'Kırmızı', color: '#EF4444' },
   ];
 
   useEffect(() => {
     if (authState.user) {
       setFirstName(authState.user.firstName);
       setLastName(authState.user.lastName);
-      setPhone('+90 555 123 45 67'); // Mock telefon
+      setPhone(authState.user.phone || '+90 555 123 45 67');
+      setSelectedAvatar(authState.user.avatar || 0);
     }
   }, [authState.user]);
 
@@ -91,28 +94,52 @@ export default function ProfileEditScreen() {
   };
 
   const handleSave = async () => {
-    if (!validateForm() || isLoading) return;
+    console.log('handleSave called');
+    console.log('Form data:', { firstName, lastName, phone, selectedAvatar });
+    
+    if (!validateForm() || isLoading) {
+      console.log('Form validation failed or already loading');
+      return;
+    }
     
     setIsLoading(true);
     setError('');
     
     try {
-      // Mock API çağrısı simülasyonu
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      console.log('Calling updateProfile...');
       
-      Alert.alert(
-        'Başarılı!',
-        'Profil bilgileriniz kaydedildi.',
-        [
-          {
-            text: 'Tamam',
-            onPress: () => {
-              navigation.goBack();
+      // Profil bilgilerini güncelle
+      const success = await updateProfile({
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        phone: phone.trim(),
+        avatar: selectedAvatar
+      });
+      
+      console.log('updateProfile result:', success);
+      
+      if (success) {
+        console.log('Profile updated successfully!');
+        
+        Alert.alert(
+          'Başarılı!',
+          'Profil bilgileriniz kaydedildi.',
+          [
+            {
+              text: 'Tamam',
+              onPress: () => {
+                console.log('Alert OK pressed, navigating back...');
+                navigation.goBack();
+              }
             }
-          }
-        ]
-      );
+          ]
+        );
+      } else {
+        console.log('Profile update failed');
+        setError('Profil kaydedilirken bir hata oluştu');
+      }
     } catch (err: any) {
+      console.error('Error in handleSave:', err);
       setError(err.message || 'Profil kaydedilirken bir hata oluştu');
     } finally {
       setIsLoading(false);

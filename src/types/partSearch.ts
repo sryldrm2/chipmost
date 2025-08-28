@@ -1,22 +1,35 @@
 export interface PartSearchRequest {
-  partNumber: string;
-  quantity: number;
+  query: string;
+  category?: string;
+  minPrice?: number;
+  maxPrice?: number;
+  inStock?: boolean;
+  supplier?: string;
+}
+
+export interface PartSearchResult {
+  id: string;
+  name: string;
+  description?: string;
+  price: number;
+  currency: 'USD' | 'TRY' | 'EUR';
+  inStock: boolean;
+  stockQty?: number;
+  category?: string;
+  mpn?: string;
+  imageUrl?: string;
+  moq?: number;
 }
 
 export interface SupplierResult {
-  supplier: string;
-  partNumber: string;
-  description: string;
-  stock: number;
-  moq: number;
-  leadTime: string;
-  price: number;
-  currency: string;
-  url: string;
+  supplierName: string;
+  results: PartSearchResult[];
 }
 
 export interface PartSearchResponse {
   results: SupplierResult[];
-  totalResults: number;
   searchTime: number;
+  totalResults: number;
 }
+
+

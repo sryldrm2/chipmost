@@ -1,146 +1,302 @@
-import React from 'react';
-import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
-import { tl } from '../utils/money';
-import { useCart } from '../cart/CartContext';
-import { format } from '../utils/currency';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, Pressable, Image } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '../context/ThemeContext';
+import { CartLine } from '../cart/CartTypes';
+import { convert } from '../utils/currency';
 
-export default function CartItemRow({ id, name, unitPrice, currency, qty, thumbnail, inStock, moq }: {
-  id: string; 
-  name: string; 
-  unitPrice: number; 
-  currency: 'USD' | 'TRY' | 'EUR';
-  qty: number; 
-  thumbnail?: string | null; 
-  inStock: boolean;
-  moq?: number;
-}) {
-  const { inc, dec, removeItem } = useCart();
-  
-  const isMOQViolation = moq && qty < moq;
-  
+type Props = {
+  item: CartLine;
+  onIncrement: (id: string) => void;
+  onDecrement: (id: string) => void;
+  onRemove: (id: string) => void;
+  onUpdateQuantity: (id: string, qty: number) => void;
+};
+
+export default function CartItemRow({ item, onIncrement, onDecrement, onRemove, onUpdateQuantity }: Props) {
+  const { colors } = useTheme();
+  const [unitTRY, setUnitTRY] = useState(0);
+
+  useEffect(() => {
+    const convertPrice = async () => {
+      try {
+        const converted = await convert(item.unitPrice, item.currency, 'TRY');
+        setUnitTRY(converted);
+      } catch (error) {
+        console.error('Price conversion error:', error);
+        setUnitTRY(item.unitPrice);
+      }
+    };
+    
+    convertPrice();
+  }, [item.unitPrice, item.currency]);
+
+  const handleIncrement = () => {
+    onIncrement(item.id);
+  };
+
+  const handleDecrement = () => {
+    if (item.qty > 1) {
+      onDecrement(item.id);
+    }
+  };
+
+  const handleRemove = () => {
+    onRemove(item.id);
+  };
+
+  const handleUpdateQuantity = () => {
+    if (item.moq && item.qty < item.moq) {
+      onUpdateQuantity(item.id, item.moq);
+    }
+  };
+
   return (
-    <View style={styles.row}>
-      {thumbnail ? <Image source={{ uri: thumbnail }} style={styles.thumb} /> :
-        <View style={[styles.thumb, styles.ph]}><Text>📦</Text></View>}
-      <View style={{ flex: 1 }}>
-        <Text style={styles.name} numberOfLines={1}>{name}</Text>
-        <View style={styles.priceContainer}>
-          <Text style={styles.price}>{format(unitPrice, currency)} × {qty}</Text>
-          {currency !== 'TRY' && (
-            <Text style={styles.priceTRY}>
-              ≈ {format(unitPrice * qty, 'TRY')} (yaklaşık)
+    <View style={[styles.container, { backgroundColor: colors.card, borderColor: colors.border }]}>
+      {/* Header Row */}
+      <View style={styles.headerRow}>
+        {item.supplier && (
+          <View style={[styles.supplierBadge, { backgroundColor: colors.surface }]}>
+            <Text style={[styles.supplierText, { color: colors.textSecondary }]}>
+              {item.supplier}
             </Text>
+          </View>
+        )}
+        
+        <View style={styles.stockStatus}>
+          <Ionicons 
+            name={item.inStock ? 'checkmark-circle' : 'close-circle'} 
+            size={16} 
+            color={item.inStock ? colors.success : colors.error} 
+          />
+          <Text style={[styles.stockText, { color: item.inStock ? colors.success : colors.error }]}>
+            {item.inStock ? 'Stokta' : 'Stok Yok'}
+          </Text>
+        </View>
+      </View>
+
+      {/* Main Content */}
+      <View style={styles.contentRow}>
+        {/* Thumbnail */}
+        <View style={styles.thumbnailContainer}>
+          {item.thumbnail ? (
+            <Image source={{ uri: item.thumbnail }} style={styles.thumbnail} />
+          ) : (
+            <View style={[styles.thumbnailPlaceholder, { backgroundColor: colors.surface }]}>
+              <Ionicons name="cube-outline" size={24} color={colors.textSecondary} />
+            </View>
           )}
         </View>
-        {moq && moq > 1 && (
-          <Text style={styles.moqInfo}>Min. sipariş: {moq} adet</Text>
-        )}
-        <Text style={[styles.stockStatus, { color: inStock ? '#198754' : '#dc3545' }]}>
-          {inStock ? '✓ Stokta' : '✗ Stok Yok'}
-        </Text>
-        {isMOQViolation && (
-          <Text style={styles.moqWarning}>
-            ⚠️ Minimum sipariş miktarı: {moq} adet
+
+        {/* Product Info */}
+        <View style={styles.productInfo}>
+          <Text style={[styles.productName, { color: colors.text }]} numberOfLines={2}>
+            {item.name}
           </Text>
-        )}
-        <View style={styles.controls}>
-          <Pressable onPress={() => dec(id)} style={styles.btn}><Text style={styles.btnText}>–</Text></Pressable>
-          <Text style={styles.qty}>{qty}</Text>
-          <Pressable onPress={() => inc(id)} style={styles.btn}><Text style={styles.btnText}>+</Text></Pressable>
-          <Pressable onPress={() => removeItem(id)} style={[styles.btn, styles.rm]}><Text style={styles.rmText}>Kaldır</Text></Pressable>
+          
+          {/* Price Display */}
+          <View style={styles.priceRow}>
+            <Text style={[styles.priceMain, { color: colors.text }]}>
+              ₺{(unitTRY * item.qty).toFixed(2)}
+            </Text>
+            <Text style={[styles.priceBreakdown, { color: colors.textSecondary }]}>
+              ₺{unitTRY.toFixed(2)} × {item.qty}
+            </Text>
+          </View>
+          
+          {/* Secondary Currency */}
+          {item.currency !== 'TRY' && (
+            <Text style={[styles.priceSecondary, { color: colors.textSecondary }]}>
+              ≈ {item.currency} {item.unitPrice.toFixed(2)}
+            </Text>
+          )}
+          
+          {/* MOQ Warning */}
+          {item.moq && item.qty < item.moq && (
+            <View style={styles.moqWarning}>
+              <Ionicons name="warning" size={16} color={colors.warning} />
+              <Text style={[styles.moqText, { color: colors.warning }]}>
+                Min. sipariş: {item.moq} adet
+              </Text>
+              <Pressable onPress={handleUpdateQuantity} style={styles.moqFixButton}>
+                <Text style={[styles.moqFixText, { color: colors.primary }]}>
+                  {item.moq} yap
+                </Text>
+              </Pressable>
+            </View>
+          )}
         </View>
+
+        {/* Quantity Controls */}
+        <View style={styles.quantityControls}>
+          <Pressable 
+            style={[styles.quantityButton, { backgroundColor: colors.surface }]} 
+            onPress={handleDecrement}
+            disabled={item.qty <= 1}
+          >
+            <Ionicons name="remove" size={16} color={colors.textSecondary} />
+          </Pressable>
+          
+          <Text style={[styles.quantityText, { color: colors.text }]}>
+            {item.qty}
+          </Text>
+          
+          <Pressable 
+            style={[styles.quantityButton, { backgroundColor: colors.surface }]} 
+            onPress={handleIncrement}
+          >
+            <Ionicons name="add" size={16} color={colors.textSecondary} />
+          </Pressable>
+        </View>
+      </View>
+
+      {/* Remove Button */}
+      <View style={styles.removeButtonRow}>
+        <Pressable 
+          style={[styles.removeButton, { backgroundColor: colors.surface }]}
+          onPress={handleRemove}
+        >
+          <Ionicons name="trash-outline" size={16} color={colors.textSecondary} />
+          <Text style={[styles.removeText, { color: colors.textSecondary }]}>Kaldır</Text>
+        </Pressable>
       </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  row: {
-    flexDirection: 'row',
+  container: {
+    borderRadius: 16,
     padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
-    backgroundColor: '#fff',
+    marginBottom: 12,
+    borderWidth: 1,
   },
-  thumb: {
-    width: 60,
-    height: 60,
-    borderRadius: 8,
-    marginRight: 12,
-    backgroundColor: '#f3f4f6',
-    justifyContent: 'center',
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
+    marginBottom: 12,
   },
-  ph: {
-    backgroundColor: '#e5e7eb',
+  supplierBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
   },
-  name: {
-    fontSize: 16,
+  supplierText: {
+    fontSize: 10,
     fontWeight: '600',
-    marginBottom: 4,
-    color: '#1f2937',
-  },
-  priceContainer: {
-    marginBottom: 4,
-  },
-  price: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#059669',
-    marginBottom: 2,
-  },
-  priceTRY: {
-    fontSize: 12,
-    color: '#6b7280',
-    fontStyle: 'italic',
-  },
-  moqInfo: {
-    fontSize: 12,
-    color: '#6b7280',
-    marginBottom: 4,
   },
   stockStatus: {
-    fontSize: 14,
-    marginBottom: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
   },
-  moqWarning: {
+  stockText: {
     fontSize: 12,
-    color: '#dc2626',
-    marginBottom: 8,
     fontWeight: '500',
   },
-  controls: {
+  contentRow: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  thumbnailContainer: {
+    width: 64,
+    height: 64,
+  },
+  thumbnail: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 8,
+  },
+  thumbnailPlaceholder: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  productInfo: {
+    flex: 1,
+    gap: 4,
+  },
+  productName: {
+    fontSize: 16,
+    fontWeight: '600',
+    lineHeight: 20,
+  },
+  priceRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
   },
-  btn: {
+  priceMain: {
+    fontSize: 18,
+    fontWeight: '700',
+  },
+  priceBreakdown: {
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  priceSecondary: {
+    fontSize: 12,
+    fontStyle: 'italic',
+  },
+  moqWarning: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 4,
+  },
+  moqText: {
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  moqFixButton: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+  },
+  moqFixText: {
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  quantityControls: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  quantityButton: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: '#f3f4f6',
-    justifyContent: 'center',
     alignItems: 'center',
+    justifyContent: 'center',
   },
-  btnText: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#374151',
-  },
-  qty: {
+  quantityText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#1f2937',
     minWidth: 24,
     textAlign: 'center',
   },
-  rm: {
-    backgroundColor: '#fee2e2',
-    marginLeft: 'auto',
+  removeButtonRow: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    marginTop: 12,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(0,0,0,0.1)',
   },
-  rmText: {
+  removeButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.1)',
+  },
+  removeText: {
     fontSize: 12,
-    color: '#dc2626',
     fontWeight: '500',
   },
 });

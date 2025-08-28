@@ -4,7 +4,12 @@ import { SearchFilterProvider } from '../features/search/SearchFilterContext';
 import SearchScreen from '../screens/search/SearchScreen';
 import ProductDetailScreen from '../screens/ProductDetailScreen';
 
-const Stack = createStackNavigator();
+export type SearchStackParamList = {
+  SearchScreen: undefined;
+  ProductDetail: { productId: string };
+};
+
+const Stack = createStackNavigator<SearchStackParamList>();
 
 export default function SearchStack() {
   return (

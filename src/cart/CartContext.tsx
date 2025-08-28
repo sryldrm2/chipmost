@@ -106,9 +106,12 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       const minQty = line.moq ?? 1;
       const newQty = Math.max(minQty, line.qty - 1);
       
-      if (newQty === minQty) {
-        // MOQ'ya ulaştıysa ürünü kaldır
-        return { ...prev, lines: prev.lines.filter(x => x.id !== id) };
+      // Eğer yeni miktar MOQ'dan küçükse, miktarı MOQ'da tut
+      if (newQty < minQty) {
+        return {
+          ...prev,
+          lines: prev.lines.map(x => x.id === id ? { ...x, qty: minQty } : x)
+        };
       }
       
       return {
@@ -124,6 +127,16 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       
       const minQty = line.moq ?? 1;
       const actualQty = Math.max(qty, minQty);
+      
+      // Eğer miktar 0 veya negatifse ve MOQ 1'den büyükse, ürünü kaldır
+      if (qty <= 0 && minQty > 1) {
+        return { ...prev, lines: prev.lines.filter(x => x.id !== id) };
+      }
+      
+      // Eğer miktar 0 veya negatifse ve MOQ 1 ise, ürünü kaldır
+      if (qty <= 0 && minQty === 1) {
+        return { ...prev, lines: prev.lines.filter(x => x.id !== id) };
+      }
       
       return {
         ...prev,

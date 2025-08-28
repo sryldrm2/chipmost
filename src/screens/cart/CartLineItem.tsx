@@ -34,7 +34,7 @@ export default function CartLineItem({ item }: CartLineItemProps) {
   }, [item.unitPrice, item.currency]);
   
   const isMOQViolation = item.moq && item.qty < item.moq;
-  const canDecrement = item.qty > 1;
+  const canDecrement = item.qty > (item.moq ?? 1);
   
   const handleDecrement = () => {
     if (canDecrement) {

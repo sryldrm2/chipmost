@@ -10,7 +10,19 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import { orderService, Order } from '../../services/orderService';
+// Mock order service - gerçek uygulamada backend'den gelecek
+type Order = {
+  id: string;
+  orderNumber: string;
+  date: string;
+  total: number;
+  status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+  items: OrderItem[];
+  shippingAddress?: string;
+  paymentMethod?: string;
+  canCancel?: boolean;
+  canReturn?: boolean;
+};
 
 type OrderItem = {
   id: string;
@@ -37,8 +49,42 @@ export default function OrderHistoryScreen() {
     setError('');
     
     try {
-      const ordersData = await orderService.getOrders();
-      setOrders(ordersData);
+      // Mock order data - gerçek uygulamada API'den gelecek
+      const mockOrders: Order[] = [
+        {
+          id: '1',
+          orderNumber: 'ORD-2025-001',
+          date: '25.08.2025',
+          total: 1250.00,
+          status: 'delivered',
+          canCancel: false,
+          canReturn: true,
+          shippingAddress: 'Atatürk Mah. Cumhuriyet Cad. No:123 D:4, Kadıköy/İstanbul',
+          paymentMethod: 'Kredi Kartı',
+          items: [
+            { id: '1', productName: 'RF Connector SMA Male', quantity: 2, price: 45.00 },
+            { id: '2', productName: 'BNC Connector Female', quantity: 1, price: 32.00 },
+            { id: '3', productName: 'Coaxial Cable RG58', quantity: 5, price: 228.00 }
+          ]
+        },
+        {
+          id: '2',
+          orderNumber: 'ORD-2002-002',
+          date: '28.01.2002',
+          total: 890.50,
+          status: 'shipped',
+          canCancel: false,
+          canReturn: false,
+          shippingAddress: 'Muratçeşme Mah. Güleser Sk. No:28 A Blok Daire:6, Büyükçekmece/İstanbul',
+          paymentMethod: 'Havale/EFT',
+          items: [
+            { id: '4', productName: 'PCB Board 10x15cm', quantity: 3, price: 45.00 },
+            { id: '5', productName: 'LED Strip 5m', quantity: 1, price: 755.50 }
+          ]
+        }
+      ];
+      
+      setOrders(mockOrders);
     } catch (err: any) {
       setError('Siparişler yüklenirken bir hata oluştu');
       console.error('Error loading orders:', err);

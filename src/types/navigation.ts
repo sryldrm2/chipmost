@@ -26,8 +26,6 @@ export type HomeStackParamList = {
 
 export type SearchStackParamList = {
   SearchScreen: undefined;
-  SearchResults: { query: string };
-  FilterScreen: undefined;
   ProductDetail: { productId: string };
 };
 

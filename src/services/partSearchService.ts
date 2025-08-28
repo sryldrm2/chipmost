@@ -1,174 +1,128 @@
-import { PartSearchRequest, PartSearchResponse, SupplierResult } from '../types/partSearch';
+import { PartSearchRequest, PartSearchResponse, SupplierResult, PartSearchResult } from '../types/partSearch';
 
-// Mock supplier data - gerçek API key'ler olmadan çalışır
-const MOCK_SUPPLIERS = [
+// Mock data for demonstration
+const MOCK_PRODUCTS: PartSearchResult[] = [
   {
-    name: 'Digi-Key',
-    baseUrl: 'https://www.digikey.com',
-    searchUrl: 'https://www.digikey.com/en/products/detail/',
-  },
-  {
-    name: 'Mouser',
-    baseUrl: 'https://www.mouser.com',
-    searchUrl: 'https://www.mouser.com/ProductDetail/',
-  },
-  {
-    name: 'Farnell',
-    baseUrl: 'https://uk.farnell.com',
-    searchUrl: 'https://uk.farnell.com/',
-  },
-  {
-    name: 'LCSC',
-    baseUrl: 'https://www.lcsc.com',
-    searchUrl: 'https://www.lcsc.com/product-detail/',
-  },
-];
-
-// Mock capacitor data - örnek sonuçlar
-const MOCK_CAPACITOR_DATA = [
-  {
-    partNumber: 'STM32F103C8T6',
-    description: 'ARM Cortex-M3 32-bit MCU, 64KB Flash, 20KB SRAM, 72MHz',
-    stock: 1250,
-    moq: 1,
-    leadTime: '2-3 hafta',
-    price: 2.85,
+    id: 'SR001',
+    name: 'RF Connector SMA Male',
+    description: 'High-quality SMA male connector for RF applications',
+    price: 2.99,
     currency: 'USD',
+    inStock: true,
+    stockQty: 150,
+    category: 'connectors',
+    mpn: 'SMA-M-001',
+    moq: 10
   },
   {
-    partNumber: 'STM32F103C8T6',
-    description: 'STM32F103C8T6 ARM Cortex-M3 Microcontroller',
-    stock: 890,
-    moq: 5,
-    leadTime: '1-2 hafta',
-    price: 2.95,
+    id: 'SR002',
+    name: 'BNC Connector Female',
+    description: 'BNC female connector with gold plating',
+    price: 1.99,
     currency: 'USD',
+    inStock: true,
+    stockQty: 200,
+    category: 'connectors',
+    mpn: 'BNC-F-002',
+    moq: 25
   },
   {
-    partNumber: 'STM32F103C8T6',
-    description: 'STM32F103C8T6 MCU ARM Cortex-M3 32-bit',
-    stock: 2100,
-    moq: 10,
-    leadTime: '3-4 hafta',
-    price: 2.75,
+    id: 'SR003',
+    name: 'Coaxial Cable RG58',
+    description: 'RG58 coaxial cable, 1 meter length',
+    price: 0.99,
     currency: 'USD',
+    inStock: true,
+    stockQty: 500,
+    category: 'cables',
+    mpn: 'RG58-1M',
+    moq: 100
   },
   {
-    partNumber: 'STM32F103C8T6',
-    description: 'STM32F103C8T6 ARM Cortex-M3 32-bit Microcontroller',
-    stock: 650,
-    moq: 1,
-    leadTime: '2-3 hafta',
-    price: 2.90,
+    id: 'SR004',
+    name: 'PCB Board 10x15cm',
+    description: 'Double-sided PCB board, 10x15cm dimensions',
+    price: 5.99,
     currency: 'USD',
+    inStock: false,
+    stockQty: 0,
+    category: 'boards',
+    mpn: 'PCB-10x15',
+    moq: 5
   },
+  {
+    id: 'SR005',
+    name: 'LED Strip 5m',
+    description: 'RGB LED strip, 5 meters, 60 LEDs/m',
+    price: 15.99,
+    currency: 'USD',
+    inStock: true,
+    stockQty: 50,
+    category: 'lighting',
+    mpn: 'LED-5M-RGB',
+    moq: 1
+  }
 ];
 
 export class PartSearchService {
   static async searchParts(request: PartSearchRequest): Promise<PartSearchResponse> {
     // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 800 + Math.random() * 400));
-
-    const startTime = Date.now();
+    await new Promise(resolve => setTimeout(resolve, 500 + Math.random() * 1000));
     
-    // Generate mock results for each supplier
-    const results: SupplierResult[] = MOCK_SUPPLIERS.map((supplier, index) => {
-      const mockData = MOCK_CAPACITOR_DATA[index % MOCK_CAPACITOR_DATA.length];
-      
-      return {
-        supplier: supplier.name,
-        partNumber: request.partNumber,
-        description: mockData.description,
-        stock: mockData.stock + Math.floor(Math.random() * 500),
-        moq: mockData.moq,
-        leadTime: mockData.leadTime,
-        price: mockData.price + (Math.random() - 0.5) * 0.5,
-        currency: mockData.currency,
-        url: `${supplier.searchUrl}${request.partNumber}`,
-      };
-    });
-
-    // Add some random variation to make results more realistic
-    results.forEach(result => {
-      result.stock = Math.max(0, result.stock + Math.floor((Math.random() - 0.5) * 200));
-      result.price = Math.max(0.01, result.price + (Math.random() - 0.5) * 0.3);
-    });
-
-    // Sort by price (best price first)
-    results.sort((a, b) => a.price - b.price);
-
+    let filteredResults = [...MOCK_PRODUCTS];
+    
+    // Apply filters
+    if (request.query) {
+      const query = request.query.toLowerCase();
+      filteredResults = filteredResults.filter(product =>
+        product.name.toLowerCase().includes(query) ||
+        product.description?.toLowerCase().includes(query) ||
+        product.category?.toLowerCase().includes(query)
+      );
+    }
+    
+    if (request.category) {
+      filteredResults = filteredResults.filter(product =>
+        product.category === request.category
+      );
+    }
+    
+    if (request.minPrice !== undefined) {
+      filteredResults = filteredResults.filter(product =>
+        product.price >= request.minPrice!
+      );
+    }
+    
+    if (request.maxPrice !== undefined) {
+      filteredResults = filteredResults.filter(product =>
+        product.price <= request.maxPrice!
+      );
+    }
+    
+    if (request.inStock !== undefined) {
+      filteredResults = filteredResults.filter(product =>
+        product.inStock === request.inStock
+      );
+    }
+    
+    // Group by supplier (mock)
+    const supplierResults: SupplierResult[] = [
+      {
+        supplierName: 'Mouser Electronics',
+        results: filteredResults.slice(0, Math.ceil(filteredResults.length / 2))
+      },
+      {
+        supplierName: 'LCSC Electronics',
+        results: filteredResults.slice(Math.ceil(filteredResults.length / 2))
+      }
+    ];
+    
     return {
-      results,
-      totalResults: results.length,
-      searchTime: Date.now() - startTime,
+      results: supplierResults,
+      searchTime: Math.floor(Math.random() * 200) + 100,
+      totalResults: filteredResults.length
     };
   }
-
-  static async searchDigiKey(partNumber: string): Promise<SupplierResult[]> {
-    // Mock Digi-Key search
-    await new Promise(resolve => setTimeout(resolve, 300));
-    
-    return [{
-      supplier: 'Digi-Key',
-      partNumber,
-      description: 'ARM Cortex-M3 32-bit MCU, 64KB Flash, 20KB SRAM, 72MHz',
-      stock: 1250,
-      moq: 1,
-      leadTime: '2-3 hafta',
-      price: 2.85,
-      currency: 'USD',
-      url: `https://www.digikey.com/en/products/detail/${partNumber}`,
-    }];
-  }
-
-  static async searchMouser(partNumber: string): Promise<SupplierResult[]> {
-    // Mock Mouser search
-    await new Promise(resolve => setTimeout(resolve, 400));
-    
-    return [{
-      supplier: 'Mouser',
-      partNumber,
-      description: 'STM32F103C8T6 ARM Cortex-M3 Microcontroller',
-      stock: 890,
-      moq: 5,
-      leadTime: '1-2 hafta',
-      price: 2.95,
-      currency: 'USD',
-      url: `https://www.mouser.com/ProductDetail/${partNumber}`,
-    }];
-  }
-
-  static async searchFarnell(partNumber: string): Promise<SupplierResult[]> {
-    // Mock Farnell search
-    await new Promise(resolve => setTimeout(resolve, 350));
-    
-    return [{
-      supplier: 'Farnell',
-      partNumber,
-      description: 'STM32F103C8T6 MCU ARM Cortex-M3 32-bit',
-      stock: 2100,
-      moq: 10,
-      leadTime: '3-4 hafta',
-      price: 2.75,
-      currency: 'USD',
-      url: `https://uk.farnell.com/${partNumber}`,
-    }];
-  }
-
-  static async searchLCSC(partNumber: string): Promise<SupplierResult[]> {
-    // Mock LCSC search
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    return [{
-      supplier: 'LCSC',
-      partNumber,
-      description: 'STM32F103C8T6 ARM Cortex-M3 32-bit Microcontroller',
-      stock: 650,
-      moq: 1,
-      leadTime: '2-3 hafta',
-      price: 2.90,
-      currency: 'USD',
-      url: `https://www.lcsc.com/product-detail/${partNumber}`,
-    }];
-  }
 }
+
+

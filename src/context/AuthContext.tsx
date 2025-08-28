@@ -10,6 +10,7 @@ type AuthContextType = {
   forgotPassword: (data: ForgotPasswordData) => Promise<boolean>;
   signOut: () => Promise<void>;
   clearAuthError: () => void;
+  updateProfile: (updates: Partial<User>) => Promise<boolean>;
 };
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -157,13 +158,44 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Hata mesajlarını temizlemek için kullanılabilir
   };
 
+  const updateProfile = async (updates: Partial<User>): Promise<boolean> => {
+    try {
+      if (!state.user) return false;
+      
+      console.log('AuthContext: updateProfile called with:', updates);
+      console.log('AuthContext: Current user:', state.user);
+      
+      // Kullanıcı bilgilerini güncelle
+      const updatedUser = { ...state.user, ...updates };
+      
+      console.log('AuthContext: Updated user:', updatedUser);
+      
+      // Local storage'ı güncelle
+      await AsyncStorage.setItem(STORAGE_KEYS.USER_DATA, JSON.stringify(updatedUser));
+      
+      // State'i güncelle
+      setState(prev => ({
+        ...prev,
+        user: updatedUser
+      }));
+      
+      console.log('AuthContext: State updated successfully');
+      
+      return true;
+    } catch (error) {
+      console.error('Update profile error:', error);
+      return false;
+    }
+  };
+
   const value: AuthContextType = {
     state,
     signIn,
     signUp,
     forgotPassword,
     signOut,
-    clearAuthError
+    clearAuthError,
+    updateProfile
   };
 
   return (
